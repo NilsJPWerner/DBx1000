@@ -1,20 +1,20 @@
 #include "global.h"
 #include "helper.h"
 #include "txn.h"
-#include "occ.h"
+#include "mocc.h"
 #include "manager.h"
 #include "mem_alloc.h"
-#include "row_occ.h"
+#include "row_mocc.h"
 
 
-set_ent::set_ent() {
+mocc_set_ent::mocc_set_ent() {
 	set_size = 0;
 	txn = NULL;
 	rows = NULL;
 	next = NULL;
 }
 
-void OptCC::init() {
+void mocc_OptCC::init() {
 	tnc = 0;
 	his_len = 0;
 	active_len = 0;
@@ -22,7 +22,7 @@ void OptCC::init() {
 	lock_all = false;
 }
 
-RC OptCC::validate(txn_man * txn) {
+RC mocc_OptCC::validate(txn_man * txn) {
 	RC rc;
 #if PER_ROW_VALID
 	rc = per_row_validate(txn);
@@ -33,9 +33,9 @@ RC OptCC::validate(txn_man * txn) {
 }
 
 RC
-OptCC::per_row_validate(txn_man * txn) {
+mocc_OptCC::per_row_validate(txn_man * txn) {
 	RC rc = RCOK;
-#if CC_ALG == OCC
+#if CC_ALG == MOCC
 	// sort all rows accessed in primary key order.
 	// TODO for migration, should first sort by partition id
 	for (int i = txn->row_cnt - 1; i > 0; i--) {
@@ -84,27 +84,27 @@ OptCC::per_row_validate(txn_man * txn) {
 	return rc;
 }
 
-RC OptCC::central_validate(txn_man * txn) {
+RC mocc_OptCC::central_validate(txn_man * txn) {
 	RC rc;
 	uint64_t start_tn = txn->start_ts;
 	uint64_t finish_tn;
-	set_ent ** finish_active;
+	mocc_set_ent ** finish_active;
 	uint64_t f_active_len;
 	bool valid = true;
-	// OptCC is centralized. No need to do per partition malloc.
-	set_ent * wset;
-	set_ent * rset;
+	// mocc_OptCC is centralized. No need to do per partition malloc.
+	mocc_set_ent * wset;
+	mocc_set_ent * rset;
 	get_rw_set(txn, rset, wset);
 	bool readonly = (wset->set_size == 0);
-	set_ent * his;
-	set_ent * ent;
+	mocc_set_ent * his;
+	mocc_set_ent * ent;
 	int n = 0;
 
 	pthread_mutex_lock( &latch );
 	finish_tn = tnc;
 	ent = active;
 	f_active_len = active_len;
-	finish_active = (set_ent**) mem_allocator.alloc(sizeof(set_ent *) * f_active_len, 0);
+	finish_active = (mocc_set_ent**) mem_allocator.alloc(sizeof(mocc_set_ent *) * f_active_len, 0);
 	while (ent != NULL) {
 		finish_active[n++] = ent;
 		ent = ent->next;
@@ -127,7 +127,7 @@ RC OptCC::central_validate(txn_man * txn) {
 	}
 
 	for (UInt32 i = 0; i < f_active_len; i++) {
-		set_ent * wact = finish_active[i];
+		mocc_set_ent * wact = finish_active[i];
 		valid = test_valid(wact, rset);
 		if (valid) {
 			valid = test_valid(wact, wset);
@@ -137,13 +137,13 @@ RC OptCC::central_validate(txn_man * txn) {
 final:
 	if (valid)
 		txn->cleanup(RCOK);
-	mem_allocator.free(rset, sizeof(set_ent));
+	mem_allocator.free(rset, sizeof(mocc_set_ent));
 
 	if (!readonly) {
 		// only update active & tnc for non-readonly transactions
 		pthread_mutex_lock( &latch );
-		set_ent * act = active;
-		set_ent * prev = NULL;
+		mocc_set_ent * act = active;
+		mocc_set_ent * prev = NULL;
 		while (act->txn != txn) {
 			prev = act;
 			act = act->next;
@@ -173,9 +173,9 @@ final:
 	return rc;
 }
 
-RC OptCC::get_rw_set(txn_man * txn, set_ent * &rset, set_ent *& wset) {
-	wset = (set_ent*) mem_allocator.alloc(sizeof(set_ent), 0);
-	rset = (set_ent*) mem_allocator.alloc(sizeof(set_ent), 0);
+RC mocc_OptCC::get_rw_set(txn_man * txn, mocc_set_ent * &rset, mocc_set_ent *& wset) {
+	wset = (mocc_set_ent*) mem_allocator.alloc(sizeof(mocc_set_ent), 0);
+	rset = (mocc_set_ent*) mem_allocator.alloc(sizeof(mocc_set_ent), 0);
 	wset->set_size = txn->wr_cnt;
 	rset->set_size = txn->row_cnt - txn->wr_cnt;
 	wset->rows = (row_t **) mem_allocator.alloc(sizeof(row_t *) * wset->set_size, 0);
@@ -196,7 +196,7 @@ RC OptCC::get_rw_set(txn_man * txn, set_ent * &rset, set_ent *& wset) {
 	return RCOK;
 }
 
-bool OptCC::test_valid(set_ent * set1, set_ent * set2) {
+bool mocc_OptCC::test_valid(mocc_set_ent * set1, mocc_set_ent * set2) {
 	for (UInt32 i = 0; i < set1->set_size; i++)
 		for (UInt32 j = 0; j < set2->set_size; j++) {
 			if (set1->rows[i] == set2->rows[j]) {

@@ -6,6 +6,7 @@
 #include "query.h"
 #include "plock.h"
 #include "occ.h"
+#include "mocc.h"
 #include "vll.h"
 
 mem_alloc mem_allocator;
@@ -15,9 +16,10 @@ Manager * glob_manager;
 Query_queue * query_queue;
 Plock part_lock_man;
 OptCC occ_man;
+OptCC mocc_man;
 #if CC_ALG == VLL
 VLLMan vll_man;
-#endif 
+#endif
 
 bool volatile warmup_finish = false;
 bool volatile enable_thread_mem_pool = false;
@@ -64,7 +66,7 @@ map<string, string> g_params;
 #if TPCC_SMALL
 UInt32 g_max_items = 10000;
 UInt32 g_cust_per_dist = 2000;
-#else 
+#else
 UInt32 g_max_items = 100000;
 UInt32 g_cust_per_dist = 3000;
 #endif

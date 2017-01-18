@@ -1,7 +1,10 @@
-#pragma once 
+#pragma once
 
 #include "helper.h"
 #include "global.h"
+#include <unordered_map>
+#include <string>
+
 
 class row_t;
 class txn_man;
@@ -17,18 +20,23 @@ public:
 	ts_t 			get_min_ts(uint64_t tid = 0);
 
 	// HACK! the following mutexes are used to model a centralized
-	// lock/timestamp manager. 
+	// lock/timestamp manager.
  	void 			lock_row(row_t * row);
 	void 			release_row(row_t * row);
-	
+
 	txn_man * 		get_txn_man(int thd_id) { return _all_txns[thd_id]; };
 	void 			set_txn_man(txn_man * txn);
-	
+
 	uint64_t 		get_epoch() { return *_epoch; };
 	void 	 		update_epoch();
+
+	void 			add_temp_stat(uint64_t row_addr);
+	void			update_temp_stat(uint64_t row_addr);
+	void 			test();
+
 private:
 	// for SILO
-	volatile uint64_t * _epoch;		
+	volatile uint64_t * _epoch;
 	ts_t * 			_last_epoch_update_time;
 
 	pthread_mutex_t ts_mutex;
@@ -37,7 +45,10 @@ private:
 	uint64_t 		hash(row_t * row);
 	ts_t volatile * volatile * volatile all_ts;
 	txn_man ** 		_all_txns;
-	// for MVCC 
+	// for MVCC
 	volatile ts_t	_last_min_ts_time;
 	ts_t			_min_ts;
+
+	// unordered_map<unsigned long, unsigned long>   _temperatures;
+	unsigned long	row_addr_to_bucket(uint64_t row_addr);
 };

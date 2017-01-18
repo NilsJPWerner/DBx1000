@@ -5,6 +5,7 @@
 #include "thread.h"
 #include "mem_alloc.h"
 #include "occ.h"
+#include "mocc.h"
 #include "table.h"
 #include "catalog.h"
 #include "index_btree.h"
@@ -29,7 +30,7 @@ void txn_man::init(thread_t * h_thd, workload * h_wl, uint64_t thd_id) {
 		_validation_no_wait = true;
 	else if (g_params["validation_lock"] == "waiting")
 		_validation_no_wait = false;
-	else 
+	else
 		assert(false);
 #endif
 #if CC_ALG == TICTOC
@@ -87,9 +88,9 @@ void txn_man::cleanup(RC rc) {
 #endif
 
 		if (ROLL_BACK && type == XP &&
-					(CC_ALG == DL_DETECT || 
-					CC_ALG == NO_WAIT || 
-					CC_ALG == WAIT_DIE)) 
+					(CC_ALG == DL_DETECT ||
+					CC_ALG == NO_WAIT ||
+					CC_ALG == WAIT_DIE))
 		{
 			orig_r->return_row(type, this, accesses[rid]->orig_data);
 		} else {
@@ -104,7 +105,7 @@ void txn_man::cleanup(RC rc) {
 		for (UInt32 i = 0; i < insert_cnt; i ++) {
 			row_t * row = insert_rows[i];
 			assert(g_part_alloc == false);
-#if CC_ALG != HSTORE && CC_ALG != OCC
+#if CC_ALG != HSTORE && CC_ALG != OCC && CC_ALG != MOCC
 			mem_allocator.free(row->manager, 0);
 #endif
 			row->free_row();
@@ -138,7 +139,7 @@ row_t * txn_man::get_row(row_t * row, access_t type) {
 #endif
 		num_accesses_alloc ++;
 	}
-	
+
 	rc = row->get_row(type, this, accesses[ row_cnt ]->data);
 
 
@@ -167,7 +168,7 @@ row_t * txn_man::get_row(row_t * row, access_t type) {
 	if (type == RD)
 		row->return_row(type, this, accesses[ row_cnt ]->data);
 #endif
-	
+
 	row_cnt ++;
 	if (type == WR)
 		wr_cnt ++;
@@ -193,7 +194,7 @@ txn_man::index_read(INDEX * index, idx_key_t key, int part_id) {
 	return item;
 }
 
-void 
+void
 txn_man::index_read(INDEX * index, idx_key_t key, int part_id, itemid_t *& item) {
 	uint64_t starttime = get_sys_clock();
 	index->index_read(key, item, part_id, get_thd_id());
@@ -208,22 +209,27 @@ RC txn_man::finish(RC rc) {
 #if CC_ALG == OCC
 	if (rc == RCOK)
 		rc = occ_man.validate(this);
-	else 
+	else
+		cleanup(rc);
+#elif CC_ALG == MOCC
+	if (rc == RCOK)
+		rc = mocc_man.validate(this);
+	else
 		cleanup(rc);
 #elif CC_ALG == TICTOC
 	if (rc == RCOK)
 		rc = validate_tictoc();
-	else 
+	else
 		cleanup(rc);
 #elif CC_ALG == SILO
 	if (rc == RCOK)
 		rc = validate_silo();
-	else 
+	else
 		cleanup(rc);
 #elif CC_ALG == HEKATON
 	rc = validate_hekaton(rc);
 	cleanup(rc);
-#else 
+#else
 	cleanup(rc);
 #endif
 	uint64_t timespan = get_sys_clock() - starttime;

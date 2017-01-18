@@ -8,6 +8,7 @@
 #include "query.h"
 #include "plock.h"
 #include "occ.h"
+#include "mocc.h"
 #include "vll.h"
 
 void * f(void *);
@@ -17,16 +18,36 @@ thread_t ** m_thds;
 // defined in parser.cpp
 void parser(int argc, char * argv[]);
 
+std::string cc_name()
+{
+#if CC_ALG == HSTORE
+	return "HSTORE";
+#elif CC_ALG == OCC
+	return "OCC";
+#elif CC_ALG == MOCC
+	return "MOCC";
+#elif CC_ALG == VLL
+	return "VLL";
+#else
+	return "Something else";
+#endif
+}
+
 int main(int argc, char* argv[])
 {
 	parser(argc, argv);
-	
-	mem_allocator.init(g_part_cnt, MEM_SIZE / g_part_cnt); 
+
+	mem_allocator.init(g_part_cnt, MEM_SIZE / g_part_cnt);
 	stats.init();
 	glob_manager = (Manager *) _mm_malloc(sizeof(Manager), 64);
 	glob_manager->init();
-	if (g_cc_alg == DL_DETECT) 
+	if (g_cc_alg == DL_DETECT)
 		dl_detector.init();
+
+	printf("Using CC algorithm: %s\n", cc_name().c_str());
+	printf("Workload Max transactions per partition: %d\n", MAX_TXN_PER_PART);
+	printf("\n");
+
 	printf("mem_allocator initialized!\n");
 	workload * m_wl;
 	switch (WORKLOAD) {
@@ -35,7 +56,7 @@ int main(int argc, char* argv[])
 		case TPCC :
 			m_wl = new tpcc_wl; break;
 		case TEST :
-			m_wl = new TestWorkload; 
+			m_wl = new TestWorkload;
 			((TestWorkload *)m_wl)->tick();
 			break;
 		default:
@@ -43,7 +64,7 @@ int main(int argc, char* argv[])
 	}
 	m_wl->init();
 	printf("workload initialized!\n");
-	
+
 	uint64_t thd_cnt = g_thread_cnt;
 	pthread_t p_thds[thd_cnt - 1];
 	m_thds = new thread_t * [thd_cnt];
@@ -60,11 +81,13 @@ int main(int argc, char* argv[])
 	part_lock_man.init();
 #elif CC_ALG == OCC
 	occ_man.init();
+#elif CC_ALG == MOCC
+	mocc_man.init();
 #elif CC_ALG == VLL
 	vll_man.init();
 #endif
 
-	for (uint32_t i = 0; i < thd_cnt; i++) 
+	for (uint32_t i = 0; i < thd_cnt; i++)
 		m_thds[i]->init(i, m_wl);
 
 	if (WARMUP > 0){
@@ -92,10 +115,10 @@ int main(int argc, char* argv[])
 		pthread_create(&p_thds[i], NULL, f, (void *)vid);
 	}
 	f((void *)(thd_cnt - 1));
-	for (uint32_t i = 0; i < thd_cnt - 1; i++) 
+	for (uint32_t i = 0; i < thd_cnt - 1; i++)
 		pthread_join(p_thds[i], NULL);
 	int64_t endtime = get_server_clock();
-	
+
 	if (WORKLOAD != TEST) {
 		printf("PASS! SimTime = %ld\n", endtime - starttime);
 		if (STATS_ENABLE)

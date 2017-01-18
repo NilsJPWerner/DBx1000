@@ -2,6 +2,11 @@
 #include "row.h"
 #include "txn.h"
 #include "pthread.h"
+#include <ctime>
+#include <unordered_map>
+#include <cstdlib>
+
+std::unordered_map<unsigned long, unsigned long>  _temperatures;
 
 void Manager::init() {
 	timestamp = (uint64_t *) _mm_malloc(sizeof(uint64_t), 64);
@@ -13,7 +18,7 @@ void Manager::init() {
 	_epoch = 0;
 	_last_epoch_update_time = 0;
 	all_ts = (ts_t volatile **) _mm_malloc(sizeof(ts_t *) * g_thread_cnt, 64);
-	for (uint32_t i = 0; i < g_thread_cnt; i++) 
+	for (uint32_t i = 0; i < g_thread_cnt; i++)
 		all_ts[i] = (ts_t *) _mm_malloc(sizeof(ts_t), 64);
 
 	_all_txns = new txn_man * [g_thread_cnt];
@@ -23,9 +28,11 @@ void Manager::init() {
 	}
 	for (UInt32 i = 0; i < BUCKET_CNT; i++)
 		pthread_mutex_init( &mutexes[i], NULL );
+
+	printf("Global manager initialized\n");
 }
 
-uint64_t 
+uint64_t
 Manager::get_ts(uint64_t thread_id) {
 	if (g_ts_batch_alloc)
 		assert(g_ts_alloc == TS_CAS);
@@ -40,7 +47,7 @@ Manager::get_ts(uint64_t thread_id) {
 	case TS_CAS :
 		if (g_ts_batch_alloc)
 			time = ATOM_FETCH_ADD((*timestamp), g_ts_batch_num);
-		else 
+		else
 			time = ATOM_FETCH_ADD((*timestamp), 1);
 		break;
 	case TS_HW :
@@ -62,11 +69,11 @@ Manager::get_ts(uint64_t thread_id) {
 
 ts_t Manager::get_min_ts(uint64_t tid) {
 	uint64_t now = get_sys_clock();
-	uint64_t last_time = _last_min_ts_time; 
+	uint64_t last_time = _last_min_ts_time;
 	if (tid == 0 && now - last_time > MIN_TS_INTVL)
-	{ 
+	{
 		ts_t min = UINT64_MAX;
-    	for (UInt32 i = 0; i < g_thread_cnt; i++) 
+    	for (UInt32 i = 0; i < g_thread_cnt; i++)
 	    	if (*all_ts[i] < min)
     	    	min = *all_ts[i];
 		if (min > _min_ts)
@@ -76,7 +83,7 @@ ts_t Manager::get_min_ts(uint64_t tid) {
 }
 
 void Manager::add_ts(uint64_t thd_id, ts_t ts) {
-	assert( ts >= *all_ts[thd_id] || 
+	assert( ts >= *all_ts[thd_id] ||
 		*all_ts[thd_id] == UINT64_MAX);
 	*all_ts[thd_id] = ts;
 }
@@ -86,22 +93,21 @@ void Manager::set_txn_man(txn_man * txn) {
 	_all_txns[thd_id] = txn;
 }
 
-
 uint64_t Manager::hash(row_t * row) {
 	uint64_t addr = (uint64_t)row / MEM_ALLIGN;
     return (addr * 1103515247 + 12345) % BUCKET_CNT;
 }
- 
+
 void Manager::lock_row(row_t * row) {
 	int bid = hash(row);
-	pthread_mutex_lock( &mutexes[bid] );	
+	pthread_mutex_lock( &mutexes[bid] );
 }
 
 void Manager::release_row(row_t * row) {
 	int bid = hash(row);
 	pthread_mutex_unlock( &mutexes[bid] );
 }
-	
+
 void
 Manager::update_epoch()
 {
@@ -111,3 +117,37 @@ Manager::update_epoch()
 		*_last_epoch_update_time = time;
 	}
 }
+
+// ------- MOCC TEMPERATURE STATS --------
+
+void
+Manager::test() {
+	cout << (unsigned long) 1001 / 10;
+}
+
+unsigned long
+Manager::row_addr_to_bucket(uint64_t row_addr) {
+	return row_addr / 262144;
+}
+
+void
+Manager::add_temp_stat(uint64_t row_addr) {
+	unsigned long bucket = row_addr_to_bucket(row_addr);
+	_temperatures[bucket] = 1;
+}
+
+void
+Manager::update_temp_stat(uint64_t row_addr) {
+	unsigned long bucket = row_addr_to_bucket(row_addr);
+	unsigned long temp = _temperatures[bucket];
+	double probability = pow (2.0, -1.0 * temp);
+
+	srand(time(0));
+	bool increment = (rand() / (double)RAND_MAX) < probability;
+	if (increment) {
+		_temperatures[bucket]++;
+		printf("%lu\n", _temperatures[bucket]);
+	}
+}
+
+// lightweight locking page
