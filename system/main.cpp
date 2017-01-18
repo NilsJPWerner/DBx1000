@@ -35,6 +35,10 @@ std::string cc_name()
 
 int main(int argc, char* argv[])
 {
+	printf("Using CC algorithm: %s\n", cc_name().c_str());
+	printf("Workload Max transactions per partition: %d\n", MAX_TXN_PER_PART);
+	printf("\n");
+
 	parser(argc, argv);
 
 	mem_allocator.init(g_part_cnt, MEM_SIZE / g_part_cnt);
@@ -43,11 +47,6 @@ int main(int argc, char* argv[])
 	glob_manager->init();
 	if (g_cc_alg == DL_DETECT)
 		dl_detector.init();
-
-	printf("Using CC algorithm: %s\n", cc_name().c_str());
-	printf("Workload Max transactions per partition: %d\n", MAX_TXN_PER_PART);
-	printf("\n");
-
 	printf("mem_allocator initialized!\n");
 	workload * m_wl;
 	switch (WORKLOAD) {

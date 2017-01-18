@@ -250,12 +250,7 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 	row = txn->cur_row;
 	return rc;
 #elif CC_ALG == MOCC
-	// MOCC always make a local copy regardless of read or write
-
-
-	// printf("%lu\n", (uint64_t)txn->cur_row);
-
-
+	// OCC always make a local copy regardless of read or write
 	txn->cur_row = (row_t *) mem_allocator.alloc(sizeof(row_t), get_part_id());
 	txn->cur_row->init(get_table(), get_part_id());
 	rc = this->manager->access(txn, R_REQ);

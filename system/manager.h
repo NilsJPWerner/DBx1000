@@ -2,9 +2,6 @@
 
 #include "helper.h"
 #include "global.h"
-#include <unordered_map>
-#include <string>
-
 
 class row_t;
 class txn_man;
@@ -33,7 +30,6 @@ public:
 	void 			add_temp_stat(uint64_t row_addr);
 	void			update_temp_stat(uint64_t row_addr);
 	void 			test();
-
 private:
 	// for SILO
 	volatile uint64_t * _epoch;

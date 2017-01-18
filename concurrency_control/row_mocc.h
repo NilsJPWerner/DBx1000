@@ -22,8 +22,6 @@ private:
 	row_t * 			_row;
 	// the last update time
 	ts_t 				wts;
-
-	long unsigned int 	_virtual_page;
 };
 
 #endif

@@ -2,7 +2,7 @@
 
 #include "row.h"
 
-// TODO For simplicity, the txn hisotry for MOCC is oganized as follows:
+// TODO For simplicity, the txn hisotry for OCC is oganized as follows:
 // 1. history is never deleted.
 // 2. hisotry forms a single directional list.
 //		history head -> hist_1 -> hist_2 -> hist_3 -> ... -> hist_n
@@ -21,7 +21,7 @@ public:
 	mocc_set_ent * next;
 };
 
-class mocc_OptCC {
+class MOptCC {
 public:
 	void init();
 	RC validate(txn_man * txn);
@@ -32,7 +32,7 @@ private:
 	// per row validation similar to Hekaton.
 	RC per_row_validate(txn_man * txn);
 
-	// parallel validation in the original MOCC paper.
+	// parallel validation in the original OCC paper.
 	RC central_validate(txn_man * txn);
 	bool test_valid(mocc_set_ent * set1, mocc_set_ent * set2);
 	RC get_rw_set(txn_man * txni, mocc_set_ent * &rset, mocc_set_ent *& wset);

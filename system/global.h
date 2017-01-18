@@ -38,6 +38,7 @@ class Manager;
 class Query_queue;
 class Plock;
 class OptCC;
+class MOptCC;
 class VLLMan;
 
 typedef uint32_t UInt32;
@@ -57,7 +58,7 @@ extern Manager * glob_manager;
 extern Query_queue * query_queue;
 extern Plock part_lock_man;
 extern OptCC occ_man;
-extern OptCC mocc_man;
+extern MOptCC mocc_man;
 #if CC_ALG == VLL
 extern VLLMan vll_man;
 #endif

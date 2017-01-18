@@ -16,7 +16,7 @@ Manager * glob_manager;
 Query_queue * query_queue;
 Plock part_lock_man;
 OptCC occ_man;
-OptCC mocc_man;
+MOptCC mocc_man;
 #if CC_ALG == VLL
 VLLMan vll_man;
 #endif

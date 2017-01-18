@@ -8,6 +8,7 @@
 
 std::unordered_map<unsigned long, unsigned long>  _temperatures;
 
+
 void Manager::init() {
 	timestamp = (uint64_t *) _mm_malloc(sizeof(uint64_t), 64);
 	*timestamp = 1;
@@ -93,6 +94,7 @@ void Manager::set_txn_man(txn_man * txn) {
 	_all_txns[thd_id] = txn;
 }
 
+
 uint64_t Manager::hash(row_t * row) {
 	uint64_t addr = (uint64_t)row / MEM_ALLIGN;
     return (addr * 1103515247 + 12345) % BUCKET_CNT;
@@ -127,7 +129,7 @@ Manager::test() {
 
 unsigned long
 Manager::row_addr_to_bucket(uint64_t row_addr) {
-	return row_addr / 262144;
+	return row_addr / (64 * 1000);
 }
 
 void
@@ -151,3 +153,4 @@ Manager::update_temp_stat(uint64_t row_addr) {
 }
 
 // lightweight locking page
+

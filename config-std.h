@@ -205,7 +205,7 @@ extern TestCases					g_test_case;
 #define SILO						9
 #define VLL							10
 #define HEKATON 					11
-#define MOCC						12
+#define MOCC 						12
 //Isolation Levels
 #define SERIALIZABLE				1
 #define SNAPSHOT					2

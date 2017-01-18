@@ -14,7 +14,7 @@ mocc_set_ent::mocc_set_ent() {
 	next = NULL;
 }
 
-void mocc_OptCC::init() {
+void MOptCC::init() {
 	tnc = 0;
 	his_len = 0;
 	active_len = 0;
@@ -22,7 +22,7 @@ void mocc_OptCC::init() {
 	lock_all = false;
 }
 
-RC mocc_OptCC::validate(txn_man * txn) {
+RC MOptCC::validate(txn_man * txn) {
 	RC rc;
 #if PER_ROW_VALID
 	rc = per_row_validate(txn);
@@ -33,7 +33,7 @@ RC mocc_OptCC::validate(txn_man * txn) {
 }
 
 RC
-mocc_OptCC::per_row_validate(txn_man * txn) {
+MOptCC::per_row_validate(txn_man * txn) {
 	RC rc = RCOK;
 #if CC_ALG == MOCC
 	// sort all rows accessed in primary key order.
@@ -84,14 +84,14 @@ mocc_OptCC::per_row_validate(txn_man * txn) {
 	return rc;
 }
 
-RC mocc_OptCC::central_validate(txn_man * txn) {
+RC MOptCC::central_validate(txn_man * txn) {
 	RC rc;
 	uint64_t start_tn = txn->start_ts;
 	uint64_t finish_tn;
 	mocc_set_ent ** finish_active;
 	uint64_t f_active_len;
 	bool valid = true;
-	// mocc_OptCC is centralized. No need to do per partition malloc.
+	// OptCC is centralized. No need to do per partition malloc.
 	mocc_set_ent * wset;
 	mocc_set_ent * rset;
 	get_rw_set(txn, rset, wset);
@@ -173,7 +173,7 @@ final:
 	return rc;
 }
 
-RC mocc_OptCC::get_rw_set(txn_man * txn, mocc_set_ent * &rset, mocc_set_ent *& wset) {
+RC MOptCC::get_rw_set(txn_man * txn, mocc_set_ent * &rset, mocc_set_ent *& wset) {
 	wset = (mocc_set_ent*) mem_allocator.alloc(sizeof(mocc_set_ent), 0);
 	rset = (mocc_set_ent*) mem_allocator.alloc(sizeof(mocc_set_ent), 0);
 	wset->set_size = txn->wr_cnt;
@@ -196,7 +196,7 @@ RC mocc_OptCC::get_rw_set(txn_man * txn, mocc_set_ent * &rset, mocc_set_ent *& w
 	return RCOK;
 }
 
-bool mocc_OptCC::test_valid(mocc_set_ent * set1, mocc_set_ent * set2) {
+bool MOptCC::test_valid(mocc_set_ent * set1, mocc_set_ent * set2) {
 	for (UInt32 i = 0; i < set1->set_size; i++)
 		for (UInt32 j = 0; j < set2->set_size; j++) {
 			if (set1->rows[i] == set2->rows[j]) {

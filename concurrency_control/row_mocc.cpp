@@ -2,26 +2,23 @@
 #include "row.h"
 #include "row_mocc.h"
 #include "mem_alloc.h"
-#include "manager.h"
+// #include "manager.h"
 
 void
 Row_mocc::init(row_t * row) {
 	_row = row;
 	int part_id = row->get_part_id();
-
 	_latch = (pthread_mutex_t *)
 		mem_allocator.alloc(sizeof(pthread_mutex_t), part_id);
 	pthread_mutex_init( _latch, NULL );
 	wts = 0;
 	blatch = false;
 
-	glob_manager->add_temp_stat((uint64_t)_row);
+	// glob_manager->add_temp_stat((uint64_t)_row);
 }
 
 RC
 Row_mocc::access(txn_man * txn, TsType type) {
-	glob_manager->update_temp_stat((uint64_t)_row);
-
 	RC rc = RCOK;
 	pthread_mutex_lock( _latch );
 	if (type == R_REQ) {
@@ -35,6 +32,9 @@ Row_mocc::access(txn_man * txn, TsType type) {
 		assert(false);
 	pthread_mutex_unlock( _latch );
 	return rc;
+
+	// glob_manager->update_temp_stat((uint64_t)_row);
+
 }
 
 void
