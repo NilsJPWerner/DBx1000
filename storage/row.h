@@ -31,6 +31,7 @@ class Row_occ;
 class Row_mocc;
 class Row_tictoc;
 class Row_silo;
+class Row_mocc_silo;
 class Row_vll;
 
 class row_t
@@ -100,6 +101,8 @@ public:
   	Row_tictoc * manager;
   #elif CC_ALG == SILO
   	Row_silo * manager;
+  #elif CC_ALG == MOCC_SILO
+  	Row_mocc_silo * manager;
   #elif CC_ALG == VLL
   	Row_vll * manager;
   #endif

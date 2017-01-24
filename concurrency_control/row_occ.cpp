@@ -3,11 +3,11 @@
 #include "row_occ.h"
 #include "mem_alloc.h"
 
-void 
+void
 Row_occ::init(row_t * row) {
 	_row = row;
 	int part_id = row->get_part_id();
-	_latch = (pthread_mutex_t *) 
+	_latch = (pthread_mutex_t *)
 		mem_allocator.alloc(sizeof(pthread_mutex_t), part_id);
 	pthread_mutex_init( _latch, NULL );
 	wts = 0;
@@ -21,11 +21,11 @@ Row_occ::access(txn_man * txn, TsType type) {
 	if (type == R_REQ) {
 		if (txn->start_ts < wts)
 			rc = Abort;
-		else { 
+		else {
 			txn->cur_row->copy(_row);
 			rc = RCOK;
 		}
-	} else 
+	} else
 		assert(false);
 	pthread_mutex_unlock( _latch );
 	return rc;

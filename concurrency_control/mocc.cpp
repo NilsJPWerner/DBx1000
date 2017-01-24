@@ -24,7 +24,7 @@ void MOptCC::init() {
 
 RC MOptCC::validate(txn_man * txn) {
 	RC rc;
-#if PER_ROW_VALID
+#if MOCC_PER_ROW_VALID
 	rc = per_row_validate(txn);
 #else
 	rc = central_validate(txn);
@@ -61,11 +61,18 @@ MOptCC::per_row_validate(txn_man * txn) {
 	// Validate each access
 	bool ok = true;
 	int lock_cnt = 0;
+	uint64_t invalid_row;
+	// Should I have this continue through the verification to find
+	// all rows that conflict and update temp for all of them?
 	for (int i = 0; i < txn->row_cnt && ok; i++) {
 		lock_cnt ++;
 		txn->accesses[i]->orig_row->manager->latch();
 		ok = txn->accesses[i]->orig_row->manager->validate( txn->start_ts );
+		if (!ok) {
+			invalid_row = (uint64_t) txn->accesses[i]->orig_row;
+		}
 	}
+
 	if (ok) {
 		// Validation passed.
 		// advance the global timestamp and get the end_ts
@@ -74,6 +81,7 @@ MOptCC::per_row_validate(txn_man * txn) {
 		txn->cleanup(RCOK);
 		rc = RCOK;
 	} else {
+		glob_manager->update_temp_stat(invalid_row);
 		txn->cleanup(Abort);
 		rc = Abort;
 	}
@@ -100,6 +108,8 @@ RC MOptCC::central_validate(txn_man * txn) {
 	mocc_set_ent * ent;
 	int n = 0;
 
+	vector<UInt64> invalid_rows;
+
 	pthread_mutex_lock( &latch );
 	finish_tn = tnc;
 	ent = active;
@@ -121,18 +131,28 @@ RC MOptCC::central_validate(txn_man * txn) {
 		while (his && his->tn > start_tn) {
 			valid = test_valid(his, rset);
 			if (!valid)
+				// Currently I'm just getting invalid rows from the current his (history)
+				// ASK: Should I go down to his->next?
+				get_invalid_rows(his, rset, &invalid_rows);
 				goto final;
 			his = his->next;
 		}
 	}
 
 	for (UInt32 i = 0; i < f_active_len; i++) {
+		// Again should I go through all the remaining finish_actives
+		// to find any remaining invalid rows on abort
 		mocc_set_ent * wact = finish_active[i];
 		valid = test_valid(wact, rset);
-		if (valid) {
-			valid = test_valid(wact, wset);
-		} if (!valid)
+		if (!valid) {
+			get_invalid_rows(wact, rset, &invalid_rows);
 			goto final;
+		}
+		valid = test_valid(wact, wset);
+		if (!valid) {
+			get_invalid_rows(wact, wset, &invalid_rows);
+			goto final;
+		}
 	}
 final:
 	if (valid)
@@ -169,6 +189,9 @@ final:
 	} else {
 		txn->cleanup(Abort);
 		rc = Abort;
+		for (UInt32 i = 0; i < invalid_rows.size(); i++) {
+			glob_manager->update_temp_stat((uint64_t) invalid_rows[i]);
+		}
 	}
 	return rc;
 }
@@ -204,4 +227,15 @@ bool MOptCC::test_valid(mocc_set_ent * set1, mocc_set_ent * set2) {
 			}
 		}
 	return true;
+}
+
+void MOptCC::get_invalid_rows(mocc_set_ent * set1, mocc_set_ent * set2, vector<UInt64>* invalid_rows) {
+	for (UInt32 i = 0; i < set1->set_size; i++) {
+		for (UInt32 j = 0; j < set2->set_size; j++) {
+			if (set1->rows[i] == set2->rows[j]) {
+				invalid_rows->push_back((UInt64) set1->rows[i]);
+			}
+		}
+	}
+	return;
 }

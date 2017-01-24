@@ -79,6 +79,9 @@
 // [OCC]
 #define MAX_WRITE_SET				10
 #define PER_ROW_VALID				true
+// [MOCC]
+#define MOCC_MAX_WRITE_SET			10
+#define MOCC_PER_ROW_VALID			true
 // [TICTOC]
 #define WRITE_COPY_FORM				"data" // ptr or data
 #define TICTOC_MV					false
@@ -115,9 +118,9 @@
 // ==== [YCSB] ====
 #define INIT_PARALLELISM			40
 #define SYNTH_TABLE_SIZE 			(1024 * 1024 * 10)
-#define ZIPF_THETA 					0.6
-#define READ_PERC 					0.9
-#define WRITE_PERC 					0.1
+#define ZIPF_THETA 					0.9  // was 0.6  .999
+#define READ_PERC 					0.5  // was 0.9
+#define WRITE_PERC 					0.5  // was 0.1
 #define SCAN_PERC 					0
 #define SCAN_LEN					20
 #define PART_PER_TXN 				1
@@ -206,6 +209,7 @@ extern TestCases					g_test_case;
 #define VLL							10
 #define HEKATON 					11
 #define MOCC 						12
+#define MOCC_SILO					13
 //Isolation Levels
 #define SERIALIZABLE				1
 #define SNAPSHOT					2

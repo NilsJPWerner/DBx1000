@@ -129,7 +129,7 @@ Manager::test() {
 
 unsigned long
 Manager::row_addr_to_bucket(uint64_t row_addr) {
-	return row_addr / (64 * 1000);
+	return row_addr / (64 * 10000);
 }
 
 void
@@ -146,9 +146,12 @@ Manager::update_temp_stat(uint64_t row_addr) {
 
 	srand(time(0));
 	bool increment = (rand() / (double)RAND_MAX) < probability;
+
 	if (increment) {
 		_temperatures[bucket]++;
-		printf("%lu\n", _temperatures[bucket]);
+		if (_temperatures[bucket] > 1) {
+			printf("%lu\n", _temperatures[bucket]);
+		}
 	}
 }
 

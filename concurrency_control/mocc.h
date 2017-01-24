@@ -35,6 +35,7 @@ private:
 	// parallel validation in the original OCC paper.
 	RC central_validate(txn_man * txn);
 	bool test_valid(mocc_set_ent * set1, mocc_set_ent * set2);
+	void get_invalid_rows(mocc_set_ent * set1, mocc_set_ent * set2, vector<UInt64> * invalid_rows);
 	RC get_rw_set(txn_man * txni, mocc_set_ent * &rset, mocc_set_ent *& wset);
 
 	// "history" stores write set of transactions with tn >= smallest running tn

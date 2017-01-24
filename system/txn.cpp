@@ -24,7 +24,7 @@ void txn_man::init(thread_t * h_thd, workload * h_wl, uint64_t thd_id) {
 	for (int i = 0; i < MAX_ROW_PER_TXN; i++)
 		accesses[i] = NULL;
 	num_accesses_alloc = 0;
-#if CC_ALG == TICTOC || CC_ALG == SILO
+#if CC_ALG == TICTOC || CC_ALG == SILO || CC_ALG == MOCC_SILO
 	_pre_abort = (g_params["pre_abort"] == "true");
 	if (g_params["validation_lock"] == "no-wait")
 		_validation_no_wait = true;
@@ -37,7 +37,7 @@ void txn_man::init(thread_t * h_thd, workload * h_wl, uint64_t thd_id) {
 	_max_wts = 0;
 	_write_copy_ptr = (g_params["write_copy_form"] == "ptr");
 	_atomic_timestamp = (g_params["atomic_timestamp"] == "true");
-#elif CC_ALG == SILO
+#elif CC_ALG == SILO || CC_ALG == MOCC_SILO
 	_cur_tid = 0;
 #endif
 
@@ -96,7 +96,7 @@ void txn_man::cleanup(RC rc) {
 		} else {
 			orig_r->return_row(type, this, accesses[rid]->data);
 		}
-#if CC_ALG != TICTOC && CC_ALG != SILO
+#if CC_ALG != TICTOC && CC_ALG != SILO && CC_ALG != MOCC_SILO
 		accesses[rid]->data = NULL;
 #endif
 	}
@@ -128,7 +128,7 @@ row_t * txn_man::get_row(row_t * row, access_t type) {
 	if (accesses[row_cnt] == NULL) {
 		Access * access = (Access *) _mm_malloc(sizeof(Access), 64);
 		accesses[row_cnt] = access;
-#if (CC_ALG == SILO || CC_ALG == TICTOC)
+#if (CC_ALG == SILO || CC_ALG == TICTOC || CC_ALG == MOCC_SILO)
 		access->data = (row_t *) _mm_malloc(sizeof(row_t), 64);
 		access->data->init(MAX_TUPLE_SIZE);
 		access->orig_data = (row_t *) _mm_malloc(sizeof(row_t), 64);
@@ -152,6 +152,8 @@ row_t * txn_man::get_row(row_t * row, access_t type) {
 	accesses[row_cnt]->wts = last_wts;
 	accesses[row_cnt]->rts = last_rts;
 #elif CC_ALG == SILO
+	accesses[row_cnt]->tid = last_tid;
+#elif CC_ALG == MOCC_SILO
 	accesses[row_cnt]->tid = last_tid;
 #elif CC_ALG == HEKATON
 	accesses[row_cnt]->history_entry = history_entry;
@@ -224,6 +226,11 @@ RC txn_man::finish(RC rc) {
 #elif CC_ALG == SILO
 	if (rc == RCOK)
 		rc = validate_silo();
+	else
+		cleanup(rc);
+#elif CC_ALG == MOCC_SILO
+	if (rc == RCOK)
+		rc = validate_mocc_silo();
 	else
 		cleanup(rc);
 #elif CC_ALG == HEKATON

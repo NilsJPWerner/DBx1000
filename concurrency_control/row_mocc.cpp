@@ -2,7 +2,7 @@
 #include "row.h"
 #include "row_mocc.h"
 #include "mem_alloc.h"
-// #include "manager.h"
+#include "manager.h"
 
 void
 Row_mocc::init(row_t * row) {
@@ -14,7 +14,7 @@ Row_mocc::init(row_t * row) {
 	wts = 0;
 	blatch = false;
 
-	// glob_manager->add_temp_stat((uint64_t)_row);
+	glob_manager->add_temp_stat((uint64_t)_row);
 }
 
 RC
@@ -32,9 +32,6 @@ Row_mocc::access(txn_man * txn, TsType type) {
 		assert(false);
 	pthread_mutex_unlock( _latch );
 	return rc;
-
-	// glob_manager->update_temp_stat((uint64_t)_row);
-
 }
 
 void
