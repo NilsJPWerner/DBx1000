@@ -80,6 +80,9 @@ public:
 	ts_t 			last_tid;
 #elif CC_ALG == MOCC_SILO
 	ts_t 			last_tid;
+	// Access **		hot_accesses;
+	// int				hot_cnt;
+	// int				hot_w_cnt;
 #endif
 
 	// For OCC

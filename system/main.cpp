@@ -26,6 +26,8 @@ std::string cc_name()
 	return "OCC";
 #elif CC_ALG == MOCC
 	return "MOCC";
+#elif CC_ALG == MOCC_SILO
+	return "MOCC_SILO";
 #elif CC_ALG == VLL
 	return "VLL";
 #else

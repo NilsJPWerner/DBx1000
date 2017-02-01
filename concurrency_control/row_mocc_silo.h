@@ -1,3 +1,5 @@
+#include <thread>
+
 #pragma once
 
 class table_t;
@@ -23,13 +25,23 @@ public:
 
 	void 				assert_lock() {assert(_tid_word & LOCK_BIT); }
 private:
+	// TEST STUFF
+	UInt64 				_test_record_id;
+	std::thread::id 	_locked_by;
+	pthread_mutex_t * 	_test_lock;
+	//
+
 #if ATOMIC_WORD
 	volatile uint64_t	_tid_word;
 #else
  	pthread_mutex_t * 	_latch;
-	ts_t 				_tid;
+	ts_t 				_tid;    // Transaction ID
 #endif
 	row_t * 			_row;
+
+	// New stuff
+	spinlock *			_slock;
+	//
 };
 
 #endif
