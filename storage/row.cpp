@@ -143,65 +143,64 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 #if CC_ALG == WAIT_DIE || CC_ALG == NO_WAIT || CC_ALG == DL_DETECT
 	uint64_t thd_id = txn->get_thd_id();
 	lock_t lt = (type == RD || type == SCAN)? LOCK_SH : LOCK_EX;
-#if CC_ALG == DL_DETECT
-	uint64_t * txnids;
-	int txncnt;
-	rc = this->manager->lock_get(lt, txn, txnids, txncnt);
-#else
-	rc = this->manager->lock_get(lt, txn);
-#endif
-
-	if (rc == RCOK) {
-		row = this;
-	} else if (rc == Abort) {}
-	else if (rc == WAIT) {
-		ASSERT(CC_ALG == WAIT_DIE || CC_ALG == DL_DETECT);
-		uint64_t starttime = get_sys_clock();
-#if CC_ALG == DL_DETECT
-		bool dep_added = false;
-#endif
-		uint64_t endtime;
-		txn->lock_abort = false;
-		INC_STATS(txn->get_thd_id(), wait_cnt, 1);
-		while (!txn->lock_ready && !txn->lock_abort)
-		{
-#if CC_ALG == WAIT_DIE
-			continue;
-#elif CC_ALG == DL_DETECT
-			uint64_t last_detect = starttime;
-			uint64_t last_try = starttime;
-
-			uint64_t now = get_sys_clock();
-			if (now - starttime > g_timeout ) {
-				txn->lock_abort = true;
-				break;
-			}
-			if (g_no_dl) {
-				PAUSE
+	#if CC_ALG == DL_DETECT
+		uint64_t * txnids;
+		int txncnt;
+		rc = this->manager->lock_get(lt, txn, txnids, txncnt);
+	#else
+		rc = this->manager->lock_get(lt, txn);
+	#endif
+		if (rc == RCOK) {
+			row = this;
+		} else if (rc == Abort) {}
+		else if (rc == WAIT) {
+			ASSERT(CC_ALG == WAIT_DIE || CC_ALG == DL_DETECT);
+			uint64_t starttime = get_sys_clock();
+	#if CC_ALG == DL_DETECT
+			bool dep_added = false;
+	#endif
+			uint64_t endtime;
+			txn->lock_abort = false;
+			INC_STATS(txn->get_thd_id(), wait_cnt, 1);
+			while (!txn->lock_ready && !txn->lock_abort)
+			{
+	#if CC_ALG == WAIT_DIE
 				continue;
-			}
-			int ok = 0;
-			if ((now - last_detect > g_dl_loop_detect) && (now - last_try > DL_LOOP_TRIAL)) {
-				if (!dep_added) {
-					ok = dl_detector.add_dep(txn->get_txn_id(), txnids, txncnt, txn->row_cnt);
-					if (ok == 0)
-						dep_added = true;
-					else if (ok == 16)
-						last_try = now;
+	#elif CC_ALG == DL_DETECT
+				uint64_t last_detect = starttime;
+				uint64_t last_try = starttime;
+
+				uint64_t now = get_sys_clock();
+				if (now - starttime > g_timeout ) {
+					txn->lock_abort = true;
+					break;
 				}
-				if (dep_added) {
-					ok = dl_detector.detect_cycle(txn->get_txn_id());
-					if (ok == 16)  // failed to lock the deadlock detector
-						last_try = now;
-					else if (ok == 0)
-						last_detect = now;
-					else if (ok == 1) {
-						last_detect = now;
+				if (g_no_dl) {
+					PAUSE
+					continue;
+				}
+				int ok = 0;
+				if ((now - last_detect > g_dl_loop_detect) && (now - last_try > DL_LOOP_TRIAL)) {
+					if (!dep_added) {
+						ok = dl_detector.add_dep(txn->get_txn_id(), txnids, txncnt, txn->row_cnt);
+						if (ok == 0)
+							dep_added = true;
+						else if (ok == 16)
+							last_try = now;
 					}
-				}
-			} else
-				PAUSE
-#endif
+					if (dep_added) {
+						ok = dl_detector.detect_cycle(txn->get_txn_id());
+						if (ok == 16)  // failed to lock the deadlock detector
+							last_try = now;
+						else if (ok == 0)
+							last_detect = now;
+						else if (ok == 1) {
+							last_detect = now;
+						}
+					}
+				} else
+					PAUSE
+	#endif
 		}
 		if (txn->lock_ready)
 			rc = RCOK;
@@ -259,12 +258,34 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 	rc = this->manager->access(txn, R_REQ);
 	row = txn->cur_row;
 	return rc;
-#elif CC_ALG == TICTOC || CC_ALG == SILO || CC_ALG == MOCC_SILO
+#elif CC_ALG == TICTOC || CC_ALG == SILO
 	// like OCC, tictoc also makes a local copy for each read/write
 	row->table = get_table();
 	TsType ts_type = (type == RD)? R_REQ : P_REQ;
 	rc = this->manager->access(txn, ts_type, row);
 	return rc;
+
+//////////////////
+#elif CC_ALG == MOCC_SILO
+	bool hot_record = false;
+	if (false) {
+	// if (this->manager->get_temperature() >= TEMP_THRESHOLD) {  // Need to implement this
+		hot_record = true;
+		lock_t lock_type = (type == RD || type == SCAN)? LOCK_SH : LOCK_EX;
+		rc = this->manager->hot_lock(lock_type, txn);
+		if (rc == Abort) {
+			return rc;
+			// currently this is implementing a no_wait strategy.
+			// Might want to use wait die instead of mql
+			// Also currently only exclusive locks
+		}
+	}
+	row->table = get_table();
+	TsType ts_type = (type == RD)? R_REQ : P_REQ;
+	rc = this->manager->access(txn, ts_type, row, hot_record);
+	return rc;
+//////////////////
+
 #elif CC_ALG == HSTORE || CC_ALG == VLL
 	row = this;
 	return rc;

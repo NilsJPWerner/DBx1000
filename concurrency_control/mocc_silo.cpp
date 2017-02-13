@@ -65,7 +65,11 @@ txn_man::validate_mocc_silo()
 			num_locks = 0;
 			for (int i = 0; i < wr_cnt; i++) {
 				row_t * row = accesses[ write_set[i] ]->orig_row;
-				if (!row->manager->try_lock())
+				// To make hot_locking transparent to validate function,
+				// I have try_lock return true if the lock has already been taken
+				// because of hot_temp trigger.
+				// Need txn_id though to check whether txn has hot locked record
+				if (!row->manager->try_lock(this))
 					break;
 				row->manager->assert_lock();
 				num_locks ++;
@@ -119,7 +123,7 @@ txn_man::validate_mocc_silo()
 	// for repeatable_read, no need to validate the read set.
 	for (int i = 0; i < row_cnt - wr_cnt; i ++) {
 		Access * access = accesses[ read_set[i] ];
-		bool success = access->orig_row->manager->validate(access->tid, false);
+		bool success = access->orig_row->manager->validate(this, access->tid, false);
 		if (!success) {
 			rc = Abort;
 			goto final;
@@ -131,7 +135,7 @@ txn_man::validate_mocc_silo()
 	// validate rows in the write set
 	for (int i = 0; i < wr_cnt; i++) {
 		Access * access = accesses[ write_set[i] ];
-		bool success = access->orig_row->manager->validate(access->tid, true);
+		bool success = access->orig_row->manager->validate(this, access->tid, true);
 		if (!success) {
 			rc = Abort;
 			goto final;

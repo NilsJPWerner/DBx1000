@@ -37,7 +37,9 @@ void txn_man::init(thread_t * h_thd, workload * h_wl, uint64_t thd_id) {
 	_max_wts = 0;
 	_write_copy_ptr = (g_params["write_copy_form"] == "ptr");
 	_atomic_timestamp = (g_params["atomic_timestamp"] == "true");
-#elif CC_ALG == SILO || CC_ALG == MOCC_SILO
+#elif CC_ALG == SILO
+	_cur_tid = 0;
+#elif CC_ALG == MOCC_SILO
 	_cur_tid = 0;
 #endif
 

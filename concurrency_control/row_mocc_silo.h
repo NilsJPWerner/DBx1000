@@ -1,5 +1,3 @@
-#include <thread>
-
 #pragma once
 
 class table_t;
@@ -13,35 +11,31 @@ struct TsReqEntry;
 class Row_mocc_silo {
 public:
 	void 				init(row_t * row);
-	RC 					access(txn_man * txn, TsType type, row_t * local_row);
+	RC 					access(txn_man * txn, TsType type, row_t * local_row, bool hot_record);
 
-	bool				validate(ts_t tid, bool in_write_set);
+	bool				validate(txn_man * txn, ts_t tid, bool in_write_set);
 	void				write(row_t * data, uint64_t tid);
 
 	void 				lock();
 	void 				release();
-	bool				try_lock();
+	bool				try_lock(txn_man * txn);
 	uint64_t 			get_tid();
 
-	void 				assert_lock() {assert(_tid_word & LOCK_BIT); }
-private:
-	// TEST STUFF
-	UInt64 				_test_record_id;
-	std::thread::id 	_locked_by;
-	pthread_mutex_t * 	_test_lock;
-	//
+	void 				assert_lock();
 
+	RC					hot_lock(lock_t type, txn_man * txn);
+
+private:
 #if ATOMIC_WORD
 	volatile uint64_t	_tid_word;
 #else
  	pthread_mutex_t * 	_latch;
-	ts_t 				_tid;    // Transaction ID
+	ts_t 				_tid;
 #endif
 	row_t * 			_row;
 
-	// New stuff
-	spinlock *			_slock;
-	//
+	bool 				_hot_locked;
+	txn_man * 			_hot_locked_by;
 };
 
 #endif
