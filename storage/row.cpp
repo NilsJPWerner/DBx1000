@@ -268,8 +268,8 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 //////////////////
 #elif CC_ALG == MOCC_SILO
 	bool hot_record = false;
-	if (false) {
-	// if (this->manager->get_temperature() >= TEMP_THRESHOLD) {  // Need to implement this
+#if RECORD_TEMP_STATS
+	if (this->manager->get_temp() >= TEMP_THRESHOLD) {
 		hot_record = true;
 		lock_t lock_type = (type == RD || type == SCAN)? LOCK_SH : LOCK_EX;
 		rc = this->manager->hot_lock(lock_type, txn);
@@ -280,6 +280,7 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 			// Also currently only exclusive locks
 		}
 	}
+#endif
 	row->table = get_table();
 	TsType ts_type = (type == RD)? R_REQ : P_REQ;
 	rc = this->manager->access(txn, ts_type, row, hot_record);

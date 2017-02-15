@@ -122,12 +122,8 @@ Manager::update_epoch()
 
 // ------- MOCC TEMPERATURE STATS --------
 
-void
-Manager::test() {
-	cout << (unsigned long) 1001 / 10;
-}
-
 unsigned long
+// get_page_id exists in helper
 Manager::row_addr_to_bucket(uint64_t row_addr) {
 	return row_addr / (64 * 10000);
 }
@@ -136,6 +132,12 @@ void
 Manager::add_temp_stat(uint64_t row_addr) {
 	unsigned long bucket = row_addr_to_bucket(row_addr);
 	_temperatures[bucket] = 1;
+}
+
+unsigned long
+Manager::get_temp(uint64_t row_addr) {
+	unsigned long bucket = row_addr_to_bucket(row_addr);
+	return _temperatures[bucket];
 }
 
 void
@@ -154,6 +156,4 @@ Manager::update_temp_stat(uint64_t row_addr) {
 		}
 	}
 }
-
-// lightweight locking page
 

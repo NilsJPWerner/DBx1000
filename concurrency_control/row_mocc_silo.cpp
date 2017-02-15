@@ -2,11 +2,11 @@
 #include "row.h"
 #include "row_mocc_silo.h"
 #include "mem_alloc.h"
+#include "manager.h"
 
 #if CC_ALG==MOCC_SILO
 
-void
-Row_mocc_silo::init(row_t * row)
+void Row_mocc_silo::init(row_t * row)
 {
 	_row = row;
 #if ATOMIC_WORD
@@ -19,10 +19,13 @@ Row_mocc_silo::init(row_t * row)
 
     _hot_locked = false;
     _hot_locked_by = NULL;
+
+#if RECORD_TEMP_STATS
+	glob_manager->add_temp_stat((uint64_t)_row);
+#endif
 }
 
-RC
-Row_mocc_silo::access(txn_man * txn, TsType type, row_t * local_row, bool hot_record) {
+RC Row_mocc_silo::access(txn_man * txn, TsType type, row_t * local_row, bool hot_record) {
 #if ATOMIC_WORD
 	uint64_t v = 0;
 	uint64_t v2 = 1;
@@ -48,8 +51,7 @@ Row_mocc_silo::access(txn_man * txn, TsType type, row_t * local_row, bool hot_re
 	return RCOK;
 }
 
-RC
-Row_mocc_silo::hot_lock(lock_t type, txn_man * txn) {
+RC Row_mocc_silo::hot_lock(lock_t type, txn_man * txn) {
     RC rc = RCOK;
     if (try_lock(txn)) {
         _hot_locked = true;
@@ -62,16 +64,14 @@ Row_mocc_silo::hot_lock(lock_t type, txn_man * txn) {
     return rc;
 }
 
-void
-Row_mocc_silo::assert_lock() {
+void Row_mocc_silo::assert_lock() {
 #if ATOMIC_WORD
     assert(_tid_word & LOCK_BIT);
 #else
 #endif
 }
 
-bool
-Row_mocc_silo::validate(txn_man * txn, ts_t tid, bool in_write_set) {
+bool Row_mocc_silo::validate(txn_man * txn, ts_t tid, bool in_write_set) {
 #if ATOMIC_WORD
 	uint64_t v = _tid_word;
 	if (in_write_set)
@@ -94,9 +94,8 @@ Row_mocc_silo::validate(txn_man * txn, ts_t tid, bool in_write_set) {
 #endif
 }
 
-void
-Row_mocc_silo::write(row_t * data, uint64_t tid) {
-    // write from this copy record to the original one
+// write from this copy record to the original one
+void Row_mocc_silo::write(row_t * data, uint64_t tid) {
 	_row->copy(data);
 #if ATOMIC_WORD
 	uint64_t v = _tid_word;
@@ -107,9 +106,8 @@ Row_mocc_silo::write(row_t * data, uint64_t tid) {
 #endif
 }
 
-void
-Row_mocc_silo::lock() {
 // Lock the record
+void Row_mocc_silo::lock() {
 #if ATOMIC_WORD
 	uint64_t v = _tid_word;
 	while ((v & LOCK_BIT) || !__sync_bool_compare_and_swap(&_tid_word, v, v | LOCK_BIT)) {
@@ -121,9 +119,8 @@ Row_mocc_silo::lock() {
 #endif
 }
 
-void
-Row_mocc_silo::release() {
 // releases currently held lock
+void Row_mocc_silo::release() {
     _hot_locked = false;
 #if ATOMIC_WORD
 	assert(_tid_word & LOCK_BIT);
@@ -133,10 +130,9 @@ Row_mocc_silo::release() {
 #endif
 }
 
-bool
-Row_mocc_silo::try_lock(txn_man * txn) {
 // Attempts to lock. Locks if free and returns true
 // If locked check if hot locked by current txn
+bool Row_mocc_silo::try_lock(txn_man * txn) {
 #if ATOMIC_WORD
 	uint64_t v = _tid_word;
 	if (v & LOCK_BIT) // already locked
@@ -153,8 +149,7 @@ hot_lock_check:
     return (_hot_locked && _hot_locked_by == txn);
 }
 
-uint64_t
-Row_mocc_silo::get_tid()
+uint64_t Row_mocc_silo::get_tid()
 {
 #if ATOMIC_WORD
 	assert(ATOMIC_WORD);
@@ -162,6 +157,12 @@ Row_mocc_silo::get_tid()
 #else
 	return _tid;
 #endif
+}
+
+// Will get the temperature of the record
+unsigned long Row_mocc_silo::get_temp()
+{
+	return glob_manager->get_temp((uint64_t)_row);
 }
 
 #endif

@@ -24,6 +24,7 @@ public:
 	void 				assert_lock();
 
 	RC					hot_lock(lock_t type, txn_man * txn);
+	unsigned long		get_temp();
 
 private:
 #if ATOMIC_WORD

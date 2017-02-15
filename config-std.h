@@ -93,6 +93,7 @@
 #define PRE_ABORT					"true"
 #define ATOMIC_WORD					true
 // [MOCC_SILO]
+#define RECORD_TEMP_STATS			true
 #define TEMP_THRESHOLD				10
 // [HSTORE]
 // when set to true, hstore will not access the global timestamp.
