@@ -93,8 +93,11 @@
 #define PRE_ABORT					"true"
 #define ATOMIC_WORD					false
 // [MOCC_SILO]
-#define RECORD_TEMP_STATS			true
-#define TEMP_THRESHOLD				10
+#define RECORD_TEMP_STATS			false
+#define HOT_LOCK_RECORDS			false
+#define TEMP_THRESHOLD				5
+// #define LOCK_STRATEGY				"wait-die"
+#define MOCC_RW_LOCKS				true
 // [HSTORE]
 // when set to true, hstore will not access the global timestamp.
 // This is fine for single partition transactions.
@@ -121,9 +124,9 @@
 // ==== [YCSB] ====
 #define INIT_PARALLELISM			40
 #define SYNTH_TABLE_SIZE 			(1024 * 1024 * 10)
-#define ZIPF_THETA 					0.999  // was 0.6  .999
-#define READ_PERC 					0.5  // was 0.9
-#define WRITE_PERC 					0.5  // was 0.1
+#define ZIPF_THETA 					0.999  // was 0.6
+#define READ_PERC 					0.9  // was 0.9
+#define WRITE_PERC 					0.1  // was 0.1
 #define SCAN_PERC 					0
 #define SCAN_LEN					20
 #define PART_PER_TXN 				1
