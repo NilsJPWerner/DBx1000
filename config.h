@@ -97,7 +97,7 @@
 #define HOT_LOCK_RECORDS			false
 #define TEMP_THRESHOLD				5
 // #define LOCK_STRATEGY				"wait-die"
-#define MOCC_RW_LOCKS				true
+#define MOCC_RW_LOCKS				false
 // [HSTORE]
 // when set to true, hstore will not access the global timestamp.
 // This is fine for single partition transactions.
