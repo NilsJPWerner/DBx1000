@@ -30,6 +30,7 @@ public:
 	void 			add_temp_stat(uint64_t row_addr);
 	void			update_temp_stat(uint64_t row_addr);
 	unsigned long	get_temp(uint64_t row_addr);
+	unsigned int   	temp_map_size();
 private:
 	// for SILO
 	volatile uint64_t * _epoch;

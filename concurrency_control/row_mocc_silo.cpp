@@ -142,11 +142,23 @@ bool Row_mocc_silo::try_lock(txn_man * txn) {
 	if (pthread_mutex_trylock( _latch ) != EBUSY) {
         return true;
     } else {
+		// #if LOCK_STRATEGY == "wait-die"
+
+		// #endif
         goto hot_lock_check;
     }
 #endif
 hot_lock_check:
     return (_hot_locked && _hot_locked_by == txn);
+}
+
+bool Row_mocc_silo::conflict_lock(lock_t l1, lock_t l2) {
+	if (l1 == LOCK_NONE || l2 == LOCK_NONE)
+		return false;
+    else if (l1 == LOCK_EX || l2 == LOCK_EX)
+        return true;
+	else
+		return false;
 }
 
 uint64_t Row_mocc_silo::get_tid()
@@ -164,5 +176,10 @@ unsigned long Row_mocc_silo::get_temp()
 {
 	return glob_manager->get_temp((uint64_t)_row);
 }
+
+void Row_mocc_silo::update_temp_stat() {
+	return glob_manager->update_temp_stat((uint64_t)_row);
+}
+
 
 #endif

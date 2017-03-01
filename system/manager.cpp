@@ -140,8 +140,8 @@ Manager::get_temp(uint64_t row_addr) {
 	return _temperatures[bucket];
 }
 
-void
-Manager::update_temp_stat(uint64_t row_addr) {
+// Updates temp stat for page.
+void Manager::update_temp_stat(uint64_t row_addr) {
 	unsigned long bucket = row_addr_to_bucket(row_addr);
 	unsigned long temp = _temperatures[bucket];
 	double probability = pow (2.0, -1.0 * temp);
@@ -151,9 +151,14 @@ Manager::update_temp_stat(uint64_t row_addr) {
 
 	if (increment) {
 		_temperatures[bucket]++;
-		if (_temperatures[bucket] > 1) {
-			printf("%lu\n", _temperatures[bucket]);
-		}
+		// if (_temperatures[bucket] > 1) {
+		// 	printf("%lu\n", _temperatures[bucket]);
+		// }
 	}
+}
+
+unsigned int
+Manager::temp_map_size() {
+	return _temperatures.size();
 }
 

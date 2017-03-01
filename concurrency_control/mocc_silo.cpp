@@ -8,6 +8,9 @@ RC
 txn_man::validate_mocc_silo()
 {
 	RC rc = RCOK;
+	#if RECORD_TEMP_STATS
+		row_t * failed_row;
+	#endif
 	// lock write tuples in the primary key order.
 	int write_set[wr_cnt];
 	int cur_wr_idx = 0;
@@ -44,14 +47,20 @@ txn_man::validate_mocc_silo()
 		for (int i = 0; i < wr_cnt; i++) {
 			row_t * row = accesses[ write_set[i] ]->orig_row;
 			if (row->manager->get_tid() != accesses[write_set[i]]->tid) {
+				#if RECORD_TEMP_STATS
+					failed_row = row;
+				#endif
 				rc = Abort;
 				goto final;
 			}
 		}
 #if ISOLATION_LEVEL != REPEATABLE_READ
 		for (int i = 0; i < row_cnt - wr_cnt; i ++) {
-			Access * access = accesses[ read_set[i] ];
-			if (access->orig_row->manager->get_tid() != accesses[read_set[i]]->tid) {
+			row_t * row = accesses[ read_set[i] ]->orig_row;
+			if (row->manager->get_tid() != accesses[read_set[i]]->tid) {
+				#if RECORD_TEMP_STATS
+					failed_row = row;
+				#endif
 				rc = Abort;
 				goto final;
 			}
@@ -75,6 +84,9 @@ txn_man::validate_mocc_silo()
 				num_locks ++;
 				if (row->manager->get_tid() != accesses[write_set[i]]->tid)
 				{
+					#if RECORD_TEMP_STATS
+						failed_row = row;
+					#endif
 					rc = Abort;
 					goto final;
 				}
@@ -89,14 +101,20 @@ txn_man::validate_mocc_silo()
 					for (int i = 0; i < wr_cnt; i++) {
 						row_t * row = accesses[ write_set[i] ]->orig_row;
 						if (row->manager->get_tid() != accesses[write_set[i]]->tid) {
+							#if RECORD_TEMP_STATS
+								failed_row = row;
+							#endif
 							rc = Abort;
 							goto final;
 						}
 					}
 #if ISOLATION_LEVEL != REPEATABLE_READ
 					for (int i = 0; i < row_cnt - wr_cnt; i ++) {
-						Access * access = accesses[ read_set[i] ];
-						if (access->orig_row->manager->get_tid() != accesses[read_set[i]]->tid) {
+						row_t * row = accesses[ read_set[i] ]->orig_row;
+						if (row->manager->get_tid() != accesses[read_set[i]]->tid) {
+							#if RECORD_TEMP_STATS
+								failed_row = row;
+							#endif
 							rc = Abort;
 							goto final;
 						}
@@ -112,6 +130,9 @@ txn_man::validate_mocc_silo()
 			row->manager->lock();
 			num_locks++;
 			if (row->manager->get_tid() != accesses[write_set[i]]->tid) {
+				#if RECORD_TEMP_STATS
+					failed_row = row;
+				#endif
 				rc = Abort;
 				goto final;
 			}
@@ -125,6 +146,9 @@ txn_man::validate_mocc_silo()
 		Access * access = accesses[ read_set[i] ];
 		bool success = access->orig_row->manager->validate(this, access->tid, false);
 		if (!success) {
+			#if RECORD_TEMP_STATS
+				failed_row = access->orig_row;
+			#endif
 			rc = Abort;
 			goto final;
 		}
@@ -137,6 +161,9 @@ txn_man::validate_mocc_silo()
 		Access * access = accesses[ write_set[i] ];
 		bool success = access->orig_row->manager->validate(this, access->tid, true);
 		if (!success) {
+			#if RECORD_TEMP_STATS
+				failed_row = access->orig_row;
+			#endif
 			rc = Abort;
 			goto final;
 		}
@@ -149,6 +176,9 @@ txn_man::validate_mocc_silo()
 		_cur_tid ++;
 final:
 	if (rc == Abort) {
+		#if RECORD_TEMP_STATS
+			failed_row->manager->update_temp_stat();
+		#endif
 		for (int i = 0; i < num_locks; i++)
 			accesses[ write_set[i] ]->orig_row->manager->release();
 		cleanup(rc);

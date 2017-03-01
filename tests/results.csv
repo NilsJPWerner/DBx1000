@@ -1,0 +1,13 @@
+setup,txn_count,aborts,run_time
+plain_silo,1944,240,16.855127
+plain_silo,1951,245,16.521913
+plain_silo,1988,243,22.990106
+plain_silo,1938,248,17.779758
+plain_silo,1959,238,17.700511
+plain_silo,1986,251,18.345214
+record_temp,1924,247,12.319695
+record_temp,1979,241,12.760969
+record_temp,1986,224,12.388059
+record_temp,,,
+record_temp,1986,230,13.046799
+record_temp,1914,233,11.426104

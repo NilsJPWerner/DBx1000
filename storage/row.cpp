@@ -268,8 +268,10 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 //////////////////
 #elif CC_ALG == MOCC_SILO
 	bool hot_record = false;
-#if RECORD_TEMP_STATS
-	if (this->manager->get_temp() >= TEMP_THRESHOLD) {
+#if (RECORD_TEMP_STATS && HOT_LOCK_RECORDS)
+	// Could just move all of this to mocc row access function
+	// if (this->manager->get_temp() >= TEMP_THRESHOLD) {
+	if (this->get_primary_key() == 1) {
 		hot_record = true;
 		lock_t lock_type = (type == RD || type == SCAN)? LOCK_SH : LOCK_EX;
 		rc = this->manager->hot_lock(lock_type, txn);
@@ -278,6 +280,7 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 			// currently this is implementing a no_wait strategy.
 			// Might want to use wait die instead of mql
 			// Also currently only exclusive locks
+		} else {
 		}
 	}
 #endif

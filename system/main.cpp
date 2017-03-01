@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
 {
 	printf("Using CC algorithm: %s\n", cc_name().c_str());
 	printf("Workload Max transactions per partition: %d\n", MAX_TXN_PER_PART);
+	printf("Thread Count: %d\n", THREAD_CNT);
 	printf("\n");
 
 	parser(argc, argv);
@@ -122,6 +123,7 @@ int main(int argc, char* argv[])
 
 	if (WORKLOAD != TEST) {
 		printf("PASS! SimTime = %ld\n", endtime - starttime);
+		cout << "Number of temp buckets: " << glob_manager->temp_map_size() << std::endl;
 		if (STATS_ENABLE)
 			stats.print();
 	} else {

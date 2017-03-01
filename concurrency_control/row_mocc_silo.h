@@ -8,6 +8,13 @@ struct TsReqEntry;
 #if CC_ALG==MOCC_SILO
 #define LOCK_BIT (1UL << 63)
 
+// struct LockEntry {
+//     lock_t type;
+//     txn_man * txn;
+// 	LockEntry * next;
+// 	LockEntry * prev;
+// };
+
 class Row_mocc_silo {
 public:
 	void 				init(row_t * row);
@@ -23,8 +30,11 @@ public:
 
 	void 				assert_lock();
 
+	bool				conflict_lock(lock_t l1, lock_t l2);
+
 	RC					hot_lock(lock_t type, txn_man * txn);
 	unsigned long		get_temp();
+	void 				update_temp_stat();
 
 private:
 #if ATOMIC_WORD
