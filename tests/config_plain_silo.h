@@ -79,9 +79,7 @@
 // [OCC]
 #define MAX_WRITE_SET				10
 #define PER_ROW_VALID				true
-// [MOCC]
-#define MOCC_MAX_WRITE_SET			10
-#define MOCC_PER_ROW_VALID			true
+
 // [TICTOC]
 #define WRITE_COPY_FORM				"data" // ptr or data
 #define TICTOC_MV					false
@@ -214,7 +212,6 @@ extern TestCases					g_test_case;
 #define SILO						9
 #define VLL							10
 #define HEKATON 					11
-#define MOCC 						12
 #define MOCC_SILO					13
 //Isolation Levels
 #define SERIALIZABLE				1

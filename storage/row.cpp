@@ -9,7 +9,6 @@
 #include "row_mvcc.h"
 #include "row_hekaton.h"
 #include "row_occ.h"
-#include "row_mocc.h"
 #include "row_tictoc.h"
 #include "row_silo.h"
 #include "row_mocc_silo.h"
@@ -50,8 +49,6 @@ void row_t::init_manager(row_t * row) {
     manager = (Row_hekaton *) _mm_malloc(sizeof(Row_hekaton), 64);
 #elif CC_ALG == OCC
     manager = (Row_occ *) mem_allocator.alloc(sizeof(Row_occ), _part_id);
-#elif CC_ALG == MOCC
-    manager = (Row_mocc *) mem_allocator.alloc(sizeof(Row_mocc), _part_id);
 #elif CC_ALG == TICTOC
 	manager = (Row_tictoc *) _mm_malloc(sizeof(Row_tictoc), 64);
 #elif CC_ALG == SILO
@@ -251,13 +248,6 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 	rc = this->manager->access(txn, R_REQ);
 	row = txn->cur_row;
 	return rc;
-#elif CC_ALG == MOCC
-	// OCC always make a local copy regardless of read or write
-	txn->cur_row = (row_t *) mem_allocator.alloc(sizeof(row_t), get_part_id());
-	txn->cur_row->init(get_table(), get_part_id());
-	rc = this->manager->access(txn, R_REQ);
-	row = txn->cur_row;
-	return rc;
 #elif CC_ALG == TICTOC || CC_ALG == SILO
 	// like OCC, tictoc also makes a local copy for each read/write
 	row->table = get_table();
@@ -331,13 +321,6 @@ void row_t::return_row(access_t type, txn_man * txn, row_t * row) {
 		assert(rc == RCOK);
 	}
 #elif CC_ALG == OCC
-	assert (row != NULL);
-	if (type == WR)
-		manager->write( row, txn->end_ts );
-	row->free_row();
-	mem_allocator.free(row, sizeof(row_t));
-	return;
-#elif CC_ALG == MOCC
 	assert (row != NULL);
 	if (type == WR)
 		manager->write( row, txn->end_ts );

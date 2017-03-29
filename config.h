@@ -79,9 +79,6 @@
 // [OCC]
 #define MAX_WRITE_SET				10
 #define PER_ROW_VALID				true
-// [MOCC]
-#define MOCC_MAX_WRITE_SET			10
-#define MOCC_PER_ROW_VALID			true
 // [TICTOC]
 #define WRITE_COPY_FORM				"data" // ptr or data
 #define TICTOC_MV					false
@@ -93,7 +90,7 @@
 #define PRE_ABORT					"true"
 #define ATOMIC_WORD					false
 // [MOCC_SILO]
-#define RECORD_TEMP_STATS			false
+#define RECORD_TEMP_STATS			true
 #define HOT_LOCK_RECORDS			false
 #define TEMP_THRESHOLD				5
 // #define LOCK_STRATEGY				"wait-die"

@@ -58,7 +58,6 @@ extern Manager * glob_manager;
 extern Query_queue * query_queue;
 extern Plock part_lock_man;
 extern OptCC occ_man;
-extern MOptCC mocc_man;
 #if CC_ALG == VLL
 extern VLLMan vll_man;
 #endif

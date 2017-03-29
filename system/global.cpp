@@ -6,7 +6,6 @@
 #include "query.h"
 #include "plock.h"
 #include "occ.h"
-#include "mocc.h"
 #include "vll.h"
 
 mem_alloc mem_allocator;
@@ -16,7 +15,6 @@ Manager * glob_manager;
 Query_queue * query_queue;
 Plock part_lock_man;
 OptCC occ_man;
-MOptCC mocc_man;
 #if CC_ALG == VLL
 VLLMan vll_man;
 #endif

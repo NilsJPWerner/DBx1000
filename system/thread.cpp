@@ -7,7 +7,6 @@
 #include "query.h"
 #include "plock.h"
 #include "occ.h"
-#include "mocc.h"
 #include "vll.h"
 #include "ycsb_query.h"
 #include "tpcc_query.h"
@@ -123,8 +122,6 @@ RC thread_t::run() {
 		// But we advance the global ts here to simplify the implementation. However, the final
 		// results should be the same.
 		m_txn->start_ts = get_next_ts();
-#elif CC_ALG == MOCC
-		m_txn->start_ts = get_next_ts();
 #endif
 		if (rc == RCOK)
 		{
@@ -223,8 +220,6 @@ RC thread_t::runTest(txn_man * txn)
 	if (g_test_case == READ_WRITE) {
 		rc = ((TestTxnMan *)txn)->run_txn(g_test_case, 0);
 #if CC_ALG == OCC
-		txn->start_ts = get_next_ts();
-#elif CC_ALG == MOCC
 		txn->start_ts = get_next_ts();
 #endif
 		rc = ((TestTxnMan *)txn)->run_txn(g_test_case, 1);

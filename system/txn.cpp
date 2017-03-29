@@ -5,7 +5,6 @@
 #include "thread.h"
 #include "mem_alloc.h"
 #include "occ.h"
-#include "mocc.h"
 #include "table.h"
 #include "catalog.h"
 #include "index_btree.h"

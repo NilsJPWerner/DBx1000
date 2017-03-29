@@ -8,7 +8,6 @@
 #include "query.h"
 #include "plock.h"
 #include "occ.h"
-#include "mocc.h"
 #include "vll.h"
 
 void * f(void *);
@@ -24,8 +23,6 @@ std::string cc_name()
 	return "HSTORE";
 #elif CC_ALG == OCC
 	return "OCC";
-#elif CC_ALG == MOCC
-	return "MOCC";
 #elif CC_ALG == MOCC_SILO
 	return "MOCC_SILO";
 #elif CC_ALG == VLL
@@ -83,8 +80,6 @@ int main(int argc, char* argv[])
 	part_lock_man.init();
 #elif CC_ALG == OCC
 	occ_man.init();
-#elif CC_ALG == MOCC
-	mocc_man.init();
 #elif CC_ALG == VLL
 	vll_man.init();
 #endif
@@ -123,7 +118,9 @@ int main(int argc, char* argv[])
 
 	if (WORKLOAD != TEST) {
 		printf("PASS! SimTime = %ld\n", endtime - starttime);
-		cout << "Number of temp buckets: " << glob_manager->temp_map_size() << std::endl;
+		#if RECORD_TEMP_STATS
+			cout << "Number of temp buckets: " << glob_manager->temp_map_size() << std::endl;
+		#endif
 		if (STATS_ENABLE)
 			stats.print();
 	} else {

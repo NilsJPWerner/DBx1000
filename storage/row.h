@@ -28,7 +28,6 @@ class Row_mvcc;
 class Row_hekaton;
 class Row_ts;
 class Row_occ;
-class Row_mocc;
 class Row_tictoc;
 class Row_silo;
 class Row_mocc_silo;
@@ -95,8 +94,6 @@ public:
   	Row_hekaton * manager;
   #elif CC_ALG == OCC
   	Row_occ * manager;
-  #elif CC_ALG == MOCC
-  	Row_mocc * manager;
   #elif CC_ALG == TICTOC
   	Row_tictoc * manager;
   #elif CC_ALG == SILO
