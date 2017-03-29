@@ -18,7 +18,10 @@ public:
 	void r_lock();
 	void r_unlock();
     int  r_trylock();
-//private:
-    unsigned lock;
+
+    int r_upgradelock();
+
+private:
+    char lock;
 	signed char reader_count;
 };
