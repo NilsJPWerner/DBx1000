@@ -178,6 +178,7 @@ void Stats::print() {
 		);
 		fclose(outf);
 	}
+	#if VERBOSE_OUTPUT
 	printf("[summary] txn_cnt=%ld, abort_cnt=%ld"
 		", run_time=%f, time_wait=%f, time_ts_alloc=%f"
 		", time_man=%f, time_index=%f, time_abort=%f, time_cleanup=%f, latency=%f"
@@ -206,6 +207,14 @@ void Stats::print() {
 	);
 	if (g_prt_lat_distr)
 		print_lat_distr();
+	#else
+		printf("txn_cnt=%ld\n"
+			"abort_cnt=%ld\n"
+			"run_time=%f\n",
+			total_txn_cnt,
+			total_abort_cnt,
+			total_run_time / BILLION);
+	#endif
 }
 
 void Stats::print_lat_distr() {
