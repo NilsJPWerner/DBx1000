@@ -120,7 +120,7 @@
 #define MAX_TUPLE_SIZE				1024 // in bytes
 // ==== [YCSB] ====
 #define INIT_PARALLELISM			40
-#define SYNTH_TABLE_SIZE 			(1024 * 1024 * 10)     // was (1024 * 1024 * 10)
+#define SYNTH_TABLE_SIZE 			(1024 * 1024 * 12)     // was (1024 * 1024 * 10)
 #define ZIPF_THETA 					0.95  // was 0.6
 #define READ_PERC 					0.9  // was 0.9
 #define WRITE_PERC 					0.1  // was 0.1
