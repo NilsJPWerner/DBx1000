@@ -6,11 +6,13 @@
 #include <unordered_map>
 #include <cstdlib>
 
-#include "../utilities/atomic_def.h"
+#include "temp_stats.h"
 
-#if RECORD_TEMP_STATS
-	std::unordered_map<unsigned long, unsigned long>  _temperatures;
-#endif
+// #include "../utilities/atomic_def.h"
+
+// #if RECORD_TEMP_STATS
+// 	std::unordered_map<unsigned long, unsigned long>  _temperatures;
+// #endif
 
 void Manager::init() {
 	timestamp = (uint64_t *) _mm_malloc(sizeof(uint64_t), 64);
@@ -32,6 +34,10 @@ void Manager::init() {
 	}
 	for (UInt32 i = 0; i < BUCKET_CNT; i++)
 		pthread_mutex_init( &mutexes[i], NULL );
+
+	 #if RECORD_TEMP_STATS
+		_temperatures = new PageTemperatures;
+	 #endif
 
 	printf("Global manager initialized\n");
 }
@@ -127,45 +133,24 @@ Manager::update_epoch()
 
 #if RECORD_TEMP_STATS
 
-// get_page_id exists in helper
-unsigned long
-Manager::row_addr_to_bucket(uint64_t row_addr) {
-	return row_addr / (64 * 10000);
-}
-
 void
 Manager::add_temp_stat(uint64_t row_addr) {
-	unsigned long bucket = row_addr_to_bucket(row_addr);
-	ATOMIC_STORE(&_temperatures[bucket], 1);
+	_temperatures->add_temperature(row_addr);
 }
 
 unsigned long
 Manager::get_temp(uint64_t row_addr) {
-	unsigned long bucket = row_addr_to_bucket(row_addr);
-	return ATOMIC_LOAD(&_temperatures[bucket]);
+	return _temperatures->get_temperature(row_addr);
 }
 
-// Updates temp stat for page.
 void
 Manager::update_temp_stat(uint64_t row_addr) {
-	unsigned long bucket = row_addr_to_bucket(row_addr);
-	unsigned long temp = ATOMIC_LOAD(&_temperatures[bucket]);
-	double probability = pow (2.0, -1.0 * temp);
-
-	srand(time(0));
-	bool increment = (rand() / (double)RAND_MAX) < probability;
-
-	if (increment) {
-		ATOMIC_ADD(&_temperatures[bucket], 1);
-		// if (_temperatures[bucket] > 1) {
-		// 	printf("%lu\n", _temperatures[bucket]);
-		// }
-	}
+	_temperatures->increase_temperature(row_addr);
 }
 
 unsigned int
 Manager::temp_map_size() {
-	return _temperatures.size();
+	return _temperatures->num_active_pages();
 }
 
 #endif

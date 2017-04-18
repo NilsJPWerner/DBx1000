@@ -171,15 +171,18 @@ uint64_t Row_mocc_silo::get_tid()
 #endif
 }
 
-// Will get the temperature of the record
-unsigned long Row_mocc_silo::get_temp()
-{
-	return glob_manager->get_temp((uint64_t)_row);
-}
+#if RECORD_TEMP_STATS
+	//Will get the temperature of the record
+	unsigned long
+	Row_mocc_silo::get_temp()
+	{
+		return glob_manager->get_temp((uint64_t)_row);
+	}
 
-void Row_mocc_silo::update_temp_stat() {
-	return glob_manager->update_temp_stat((uint64_t)_row);
-}
+	void Row_mocc_silo::update_temp_stat() {
+		return glob_manager->update_temp_stat((uint64_t)_row);
+	}
+#endif
 
 
 #endif

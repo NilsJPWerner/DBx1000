@@ -33,8 +33,11 @@ public:
 	bool				conflict_lock(lock_t l1, lock_t l2);
 
 	RC					hot_lock(lock_t type, txn_man * txn);
-	unsigned long		get_temp();
-	void 				update_temp_stat();
+
+	#if RECORD_TEMP_STATS
+		unsigned long		get_temp();
+		void 				update_temp_stat();
+	#endif
 
 private:
 #if ATOMIC_WORD

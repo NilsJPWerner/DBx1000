@@ -3,6 +3,8 @@
 #include "helper.h"
 #include "global.h"
 
+#include "temp_stats.h"
+
 class row_t;
 class txn_man;
 
@@ -27,6 +29,7 @@ public:
 	uint64_t 		get_epoch() { return *_epoch; };
 	void 	 		update_epoch();
 
+
 	#if RECORD_TEMP_STATS
 		void 			add_temp_stat(uint64_t row_addr);
 		void			update_temp_stat(uint64_t row_addr);
@@ -49,7 +52,5 @@ private:
 	volatile ts_t	_last_min_ts_time;
 	ts_t			_min_ts;
 
-	#if RECORD_TEMP_STATS
-		unsigned long	row_addr_to_bucket(uint64_t row_addr);
-	#endif
+	PageTemperatures* _temperatures;
 };
