@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <cstdlib>
 
-#include "temp_stats.h"
 
 // #include "../utilities/atomic_def.h"
 
@@ -34,10 +33,6 @@ void Manager::init() {
 	}
 	for (UInt32 i = 0; i < BUCKET_CNT; i++)
 		pthread_mutex_init( &mutexes[i], NULL );
-
-	 #if RECORD_TEMP_STATS
-		_temperatures = new PageTemperatures;
-	 #endif
 
 	printf("Global manager initialized\n");
 }
@@ -129,28 +124,4 @@ Manager::update_epoch()
 	}
 }
 
-// ------- MOCC TEMPERATURE STATS --------
 
-#if RECORD_TEMP_STATS
-
-void
-Manager::add_temp_stat(uint64_t row_addr) {
-	_temperatures->add_temperature(row_addr);
-}
-
-unsigned long
-Manager::get_temp(uint64_t row_addr) {
-	return _temperatures->get_temperature(row_addr);
-}
-
-void
-Manager::update_temp_stat(uint64_t row_addr) {
-	_temperatures->increase_temperature(row_addr);
-}
-
-unsigned int
-Manager::temp_map_size() {
-	return _temperatures->num_active_pages();
-}
-
-#endif

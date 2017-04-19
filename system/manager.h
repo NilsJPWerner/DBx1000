@@ -29,14 +29,6 @@ public:
 	uint64_t 		get_epoch() { return *_epoch; };
 	void 	 		update_epoch();
 
-
-	#if RECORD_TEMP_STATS
-		void 			add_temp_stat(uint64_t row_addr);
-		void			update_temp_stat(uint64_t row_addr);
-		unsigned long	get_temp(uint64_t row_addr);
-		unsigned int   	temp_map_size();
-	#endif
-
 private:
 	// for SILO
 	volatile uint64_t * _epoch;
@@ -51,6 +43,4 @@ private:
 	// for MVCC
 	volatile ts_t	_last_min_ts_time;
 	ts_t			_min_ts;
-
-	PageTemperatures* _temperatures;
 };

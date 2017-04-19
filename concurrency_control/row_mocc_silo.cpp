@@ -21,7 +21,7 @@ void Row_mocc_silo::init(row_t * row)
     _hot_locked_by = NULL;
 
 #if RECORD_TEMP_STATS
-	glob_manager->add_temp_stat((uint64_t)_row);
+	temp = 0;
 #endif
 }
 
@@ -173,14 +173,13 @@ uint64_t Row_mocc_silo::get_tid()
 
 #if RECORD_TEMP_STATS
 	//Will get the temperature of the record
-	unsigned long
-	Row_mocc_silo::get_temp()
-	{
-		return glob_manager->get_temp((uint64_t)_row);
+	unsigned int
+	Row_mocc_silo::get_temp() {
+		return temp;
 	}
 
 	void Row_mocc_silo::update_temp_stat() {
-		return glob_manager->update_temp_stat((uint64_t)_row);
+		temp++;
 	}
 #endif
 

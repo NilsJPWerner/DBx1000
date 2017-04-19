@@ -35,11 +35,15 @@ public:
 	RC					hot_lock(lock_t type, txn_man * txn);
 
 	#if RECORD_TEMP_STATS
-		unsigned long		get_temp();
+		unsigned int		get_temp();
 		void 				update_temp_stat();
 	#endif
 
 private:
+	#if RECORD_TEMP_STATS
+		unsigned int		temp;
+	#endif
+
 #if ATOMIC_WORD
 	volatile uint64_t	_tid_word;
 #else

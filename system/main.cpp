@@ -118,9 +118,6 @@ int main(int argc, char* argv[])
 
 	if (WORKLOAD != TEST) {
 		printf("PASS! SimTime = %ld\n", endtime - starttime);
-		#if RECORD_TEMP_STATS
-			cout << "Number of temp buckets: " << glob_manager->temp_map_size() << std::endl;
-		#endif
 		if (STATS_ENABLE)
 			stats.print();
 	} else {
