@@ -17,4 +17,4 @@ do
     echo "Run $i done."
 done
 
-echo "Done! \nStatistics saved to: $dest"
+echo -e "Done! Statistics saved to: $dest"
