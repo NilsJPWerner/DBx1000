@@ -92,7 +92,7 @@
 #define PRE_ABORT					"true"
 #define ATOMIC_WORD					false
 // [MOCC_SILO]
-#define RECORD_TEMP_STATS			true
+#define RECORD_TEMP_STATS			false
 #define HOT_LOCK_RECORDS			false
 #define TEMP_THRESHOLD				5
 // #define LOCK_STRATEGY				"wait-die"
