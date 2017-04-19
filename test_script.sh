@@ -7,7 +7,7 @@ dest=${dest:-'tests/results.csv'}
 
 > $dest # Clean out destination
 echo "run_num,txn_count,aborts,run_time" >> $dest
-for i in {0..$runs}
+for i in $(seq 1 $runs)
 do
     results=$(./rundb)
     txn_count=$(echo $results | grep -P -o "(?<=txn_cnt=)\d+")
