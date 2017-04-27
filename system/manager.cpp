@@ -8,12 +8,6 @@
 
 #include "temp_stats.h"
 
-// #include "../utilities/atomic_def.h"
-
-// #if RECORD_TEMP_STATS
-// 	std::unordered_map<unsigned long, unsigned long>  _temperatures;
-// #endif
-
 void Manager::init() {
 	timestamp = (uint64_t *) _mm_malloc(sizeof(uint64_t), 64);
 	*timestamp = 1;
@@ -35,9 +29,9 @@ void Manager::init() {
 	for (UInt32 i = 0; i < BUCKET_CNT; i++)
 		pthread_mutex_init( &mutexes[i], NULL );
 
-	 #if RECORD_TEMP_STATS
-		_temperatures = new PageTemperatures;
-	 #endif
+	#if RECORD_TEMP_STATS && STAT_TYPE == "global-hashtable"
+			_temperatures = new PageTemperatures;
+	#endif
 
 	printf("Global manager initialized\n");
 }
@@ -131,7 +125,7 @@ Manager::update_epoch()
 
 // ------- MOCC TEMPERATURE STATS --------
 
-#if RECORD_TEMP_STATS
+#if RECORD_TEMP_STATS && STAT_TYPE == "global-hashtable"
 
 void
 Manager::add_temp_stat(uint64_t row_addr) {

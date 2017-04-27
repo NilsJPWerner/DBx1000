@@ -85,16 +85,20 @@
 #define WR_VALIDATION_SEPARATE		true
 #define WRITE_PERMISSION_LOCK		false
 #define ATOMIC_TIMESTAMP			"false"
-// [TICTOC, SILO]
+// [TICTOC, SILO, MOCC_SILO]
 #define VALIDATION_LOCK				"no-wait" // no-wait or waiting
 #define PRE_ABORT					"true"
 #define ATOMIC_WORD					false
+
 // [MOCC_SILO]
 #define RECORD_TEMP_STATS			true
+#define STAT_TYPE					"per-record"  // per-record, global-hashtable
 #define HOT_LOCK_RECORDS			false
 #define TEMP_THRESHOLD				5
 // #define LOCK_STRATEGY				"wait-die"
 #define MOCC_RW_LOCKS				false
+
+
 // [HSTORE]
 // when set to true, hstore will not access the global timestamp.
 // This is fine for single partition transactions.
