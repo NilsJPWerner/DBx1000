@@ -21,7 +21,13 @@ void Row_mocc_silo::init(row_t * row)
     _hot_locked_by = NULL;
 
 #if RECORD_TEMP_STATS
-	glob_manager->add_temp_stat((uint64_t)_row);
+	#if STAT_TYPE == "per-record"
+		temp = 0;
+	#elif STAT_TYPE == "global-hashtable"
+		glob_manager->add_temp_stat((uint64_t)_row);
+	#else
+		#error "Specified stat type is not implemented"
+	#endif
 #endif
 }
 
@@ -173,14 +179,27 @@ uint64_t Row_mocc_silo::get_tid()
 
 #if RECORD_TEMP_STATS
 	//Will get the temperature of the record
-	unsigned long
+	unsigned short
 	Row_mocc_silo::get_temp()
 	{
+	#if STAT_TYPE == "per-record"
+		temp = 0;
+	#elif STAT_TYPE == "global-hashtable"
 		return glob_manager->get_temp((uint64_t)_row);
+	#else
+		#error "Specified stat type is not implemented"
+	#endif
 	}
 
-	void Row_mocc_silo::update_temp_stat() {
+	void Row_mocc_silo::update_temp_stat()
+	{
+	#if STAT_TYPE == "per-record"
+		temp++;
+	#elif STAT_TYPE == "global-hashtable"
 		return glob_manager->update_temp_stat((uint64_t)_row);
+	#else
+		#error "Specified stat type is not implemented"
+	#endif
 	}
 #endif
 

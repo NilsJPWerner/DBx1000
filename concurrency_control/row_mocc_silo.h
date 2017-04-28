@@ -35,7 +35,7 @@ public:
 	RC					hot_lock(lock_t type, txn_man * txn);
 
 	#if RECORD_TEMP_STATS
-		unsigned long		get_temp();
+		unsigned short		get_temp();
 		void 				update_temp_stat();
 	#endif
 
@@ -50,6 +50,16 @@ private:
 
 	bool 				_hot_locked;
 	txn_man * 			_hot_locked_by;
+
+#if RECORD_TEMP_STATS
+	#if STAT_TYPE == "per-record"
+		temp++;
+	#elif STAT_TYPE == "global-hashtable"
+		// No instance varaibles needed for global temps
+	#else
+		#error "Specified stat type is not implemented"
+	#endif
+#endif
 };
 
 #endif
