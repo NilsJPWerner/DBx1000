@@ -29,7 +29,7 @@ void Manager::init() {
 	for (UInt32 i = 0; i < BUCKET_CNT; i++)
 		pthread_mutex_init( &mutexes[i], NULL );
 
-	#if RECORD_TEMP_STATS && STAT_TYPE == "global-hashtable"
+	#if RECORD_TEMP_STATS && STAT_TYPE == GLOBAL_HASHTABLE_TEMPS
 			_temperatures = new PageTemperatures;
 	#endif
 
@@ -125,7 +125,7 @@ Manager::update_epoch()
 
 // ------- MOCC TEMPERATURE STATS --------
 
-#if RECORD_TEMP_STATS && STAT_TYPE == "global-hashtable"
+#if RECORD_TEMP_STATS && STAT_TYPE == GLOBAL_HASHTABLE_TEMPS
 
 void
 Manager::add_temp_stat(uint64_t row_addr) {

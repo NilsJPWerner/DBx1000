@@ -30,7 +30,7 @@ public:
 	void 	 		update_epoch();
 
 
-	#if RECORD_TEMP_STATS && STAT_TYPE == "global-hashtable"
+	#if RECORD_TEMP_STATS && STAT_TYPE == GLOBAL_HASHTABLE_TEMPS
 		void 			add_temp_stat(uint64_t row_addr);
 		void			update_temp_stat(uint64_t row_addr);
 		unsigned long	get_temp(uint64_t row_addr);
@@ -52,7 +52,7 @@ private:
 	volatile ts_t	_last_min_ts_time;
 	ts_t			_min_ts;
 
-	#if RECORD_TEMP_STATS && STAT_TYPE == "global-hashtable"
+	#if RECORD_TEMP_STATS && STAT_TYPE == GLOBAL_HASHTABLE_TEMPS
 		PageTemperatures* _temperatures;
 	#endif
 };

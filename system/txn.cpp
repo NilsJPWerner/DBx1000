@@ -113,6 +113,7 @@ void txn_man::cleanup(RC rc) {
 			mem_allocator.free(row, sizeof(row));
 		}
 	}
+
 	row_cnt = 0;
 	wr_cnt = 0;
 	insert_cnt = 0;
