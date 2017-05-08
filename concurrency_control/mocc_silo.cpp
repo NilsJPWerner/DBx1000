@@ -74,11 +74,7 @@ txn_man::validate_mocc_silo()
 			num_locks = 0;
 			for (int i = 0; i < wr_cnt; i++) {
 				row_t * row = accesses[ write_set[i] ]->orig_row;
-				// To make hot_locking transparent to validate function,
-				// I have try_lock return true if the lock has already been taken
-				// because of hot_temp trigger.
-				// Need txn_id though to check whether txn has hot locked record
-				if (!row->manager->try_lock(this))
+				if (!row->manager->try_lock())
 					break;
 				row->manager->assert_lock();
 				num_locks ++;
@@ -94,8 +90,9 @@ txn_man::validate_mocc_silo()
 			if (num_locks == wr_cnt)
 				done = true;
 			else {
-				for (int i = 0; i < num_locks; i++)
+				for (int i = 0; i < num_locks; i++) {
 					accesses[ write_set[i] ]->orig_row->manager->release();
+				}
 				if (_pre_abort) {
 					num_locks = 0;
 					for (int i = 0; i < wr_cnt; i++) {
@@ -179,9 +176,10 @@ final:
 		#if RECORD_TEMP_STATS
 			failed_row->manager->update_temp_stat();
 		#endif
-		for (int i = 0; i < num_locks; i++)
+		for (int i = 0; i < num_locks; i++) {
 			accesses[ write_set[i] ]->orig_row->manager->release();
-		cleanup(rc);
+		}
+		// printf("FAILED: Thread num: %lu. Txn_id: %lu\n", this->get_thd_id(), this->get_txn_id());
 	} else {
 		for (int i = 0; i < wr_cnt; i++) {
 			Access * access = accesses[ write_set[i] ];
@@ -189,8 +187,18 @@ final:
 				access->data, _cur_tid );
 			accesses[ write_set[i] ]->orig_row->manager->release();
 		}
-		cleanup(rc);
+		// printf("SUCCESS: Thread num: %lu. Txn_id: %lu\n", this->get_thd_id(), this->get_txn_id());
 	}
+
+#if RECORD_TEMP_STATS && HOT_LOCK_RECORDS
+	for (int i = 0; i < wr_cnt; i++) {
+		accesses[ write_set[i] ]->orig_row->manager->hot_release(this);
+	}
+	for (int i = 0; i < row_cnt - wr_cnt; i ++) {
+		accesses[ read_set[i] ]->orig_row->manager->hot_release(this);
+	}
+#endif
+	cleanup(rc);
 	return rc;
 }
 #endif

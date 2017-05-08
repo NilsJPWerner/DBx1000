@@ -257,26 +257,20 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 
 //////////////////
 #elif CC_ALG == MOCC_SILO
-	bool hot_record = false;
+	row->table = get_table();
 #if (RECORD_TEMP_STATS && HOT_LOCK_RECORDS)
 	// Could just move all of this to mocc row access function
+	if (this->get_primary_key() == 1) {  // used for testing
 	// if (this->manager->get_temp() >= TEMP_THRESHOLD) {
-	if (this->get_primary_key() == 1) {
-		hot_record = true;
 		lock_t lock_type = (type == RD || type == SCAN)? LOCK_SH : LOCK_EX;
-		rc = this->manager->hot_lock(lock_type, txn);
-		if (rc == Abort) {
-			return rc;
-			// currently this is implementing a no_wait strategy.
-			// Might want to use wait die instead of mql
-			// Also currently only exclusive locks
-		} else {
-		}
+		rc = this->manager->hot_access(txn, lock_type, row);
+		// printf("Owner count after hot_access: %d\n", this->manager->get_owner_cnt());
+		// printf("mem_loc: %p\n", this->manager);
+		return rc;
 	}
 #endif
-	row->table = get_table();
 	TsType ts_type = (type == RD)? R_REQ : P_REQ;
-	rc = this->manager->access(txn, ts_type, row, hot_record);
+	rc = this->manager->access(txn, ts_type, row);
 	return rc;
 //////////////////
 
@@ -330,6 +324,10 @@ void row_t::return_row(access_t type, txn_man * txn, row_t * row) {
 #elif CC_ALG == TICTOC || CC_ALG == SILO || CC_ALG == MOCC_SILO
 	assert (row != NULL);
 	return;
+#elif CC_ALG == MOCC_SILO
+	assert (row != NULL);
+	this->manager->lock_release(txn);
+	return
 #elif CC_ALG == HSTORE || CC_ALG == VLL
 	return;
 #else

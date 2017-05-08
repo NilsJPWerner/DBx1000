@@ -94,12 +94,20 @@
 
 // [MOCC_SILO]
 #define RECORD_TEMP_STATS			true
-#define STAT_TYPE					"per-record"  // per-record, global-hashtable
+#define STAT_TYPE					PER_RECORD_TEMPS
 #define HOT_LOCK_RECORDS			false
-#define TEMP_THRESHOLD				5
-// #define LOCK_STRATEGY				"wait-die"
-#define MOCC_RW_LOCKS				false
+#define TEMP_THRESHOLD				4
+#define LOCK_STRATEGY				NO_WAIT_HOT_LOCK
+#define LOCK_TYPE					EX_MUTEX_HOT_LOCK
 
+#define PER_RECORD_TEMPS 			1
+#define GLOBAL_HASHTABLE_TEMPS 		2
+
+#define NO_WAIT_HOT_LOCK			1
+#define WAIT_DIE_HOT_LOCK			2
+
+#define EX_MUTEX_HOT_LOCK			1
+#define RW_SPINLOCK_HOT_LOCK		2
 
 // [HSTORE]
 // when set to true, hstore will not access the global timestamp.
