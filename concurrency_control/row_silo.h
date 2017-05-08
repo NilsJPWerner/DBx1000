@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 class table_t;
 class Catalog;
@@ -12,16 +12,16 @@ class Row_silo {
 public:
 	void 				init(row_t * row);
 	RC 					access(txn_man * txn, TsType type, row_t * local_row);
-	
+
 	bool				validate(ts_t tid, bool in_write_set);
 	void				write(row_t * data, uint64_t tid);
-	
+
 	void 				lock();
 	void 				release();
 	bool				try_lock();
 	uint64_t 			get_tid();
 
-	void 				assert_lock() {assert(_tid_word & LOCK_BIT); }
+	void 				assert_lock();
 private:
 #if ATOMIC_WORD
 	volatile uint64_t	_tid_word;
