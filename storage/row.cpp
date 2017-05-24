@@ -260,8 +260,8 @@ RC row_t::get_row(access_t type, txn_man * txn, row_t *& row) {
 	row->table = get_table();
 #if (RECORD_TEMP_STATS && HOT_LOCK_RECORDS)
 	// Could just move all of this to mocc row access function
-	if (this->get_primary_key() == 1) {  // used for testing
-	// if (this->manager->get_temp() >= TEMP_THRESHOLD) {
+	// if (this->get_primary_key() == 1) {  // used for testing
+	if (this->manager->get_temp() >= TEMP_THRESHOLD) {
 		lock_t lock_type = (type == RD || type == SCAN)? LOCK_SH : LOCK_EX;
 		rc = this->manager->hot_access(txn, lock_type, row);
 		// printf("Owner count after hot_access: %d\n", this->manager->get_owner_cnt());
